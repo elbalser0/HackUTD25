@@ -1,5 +1,3 @@
-# Prompt/AGENTS.md/Generic 
-
 # Agent Operating Guide 
 
 > Guidance for autonomous coding agents (OpenAI Codex CLI, Copilot Agent Mode, Cursor, etc.)
