@@ -1,0 +1,81 @@
+import React from 'react';
+import { View, TextInput, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import colors from '../constants/colors';
+
+const ChatInput = ({ value, onChangeText, onSend, placeholder, disabled }) => {
+  return (
+    <View style={styles.container}>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={[styles.textInput, disabled && styles.disabled]}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder || "Type your response..."}
+          placeholderTextColor={colors.text.secondary}
+          multiline
+          editable={!disabled}
+        />
+        <TouchableOpacity
+          style={[styles.sendButton, (!value.trim() || disabled) && styles.sendButtonDisabled]}
+          onPress={onSend}
+          disabled={!value.trim() || disabled}
+        >
+          <Text style={[styles.sendText, (!value.trim() || disabled) && styles.sendTextDisabled]}>
+            →
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    backgroundColor: colors.background.secondary,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    minHeight: 44,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.text.primary,
+    maxHeight: 100,
+    paddingVertical: 8,
+  },
+  disabled: {
+    color: colors.text.secondary,
+  },
+  sendButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.pnc.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  sendButtonDisabled: {
+    backgroundColor: colors.text.secondary,
+  },
+  sendText: {
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  sendTextDisabled: {
+    color: colors.white,
+  },
+});
+
+export default ChatInput;
