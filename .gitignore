@@ -51,3 +51,4 @@ build/
 
 # Local state
 .bash_history
+pnc-productivity-app/.env
