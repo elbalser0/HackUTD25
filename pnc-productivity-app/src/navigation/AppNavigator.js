@@ -31,10 +31,12 @@ const MainTabs = () => (
       name="Chat" 
       component={ChatScreen}
       options={{
-        tabBarLabel: 'AI Assistant',
+        tabBarLabel: 'Chat',
         tabBarIcon: ({ color, size }) => (
-          <Text style={{ fontSize: size, color }}>🤖</Text>
+          <Text style={{ fontSize: size, color }}>💬</Text>
         ),
+        // Hide the bottom tab bar on the chat screen so input can sit flush at bottom
+        tabBarStyle: { display: 'none' },
       }}
     />
   </Tab.Navigator>

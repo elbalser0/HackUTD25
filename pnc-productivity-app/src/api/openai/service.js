@@ -7,6 +7,93 @@ class OpenAIService {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${OPENAI_API_KEY}`,
     };
+    // Performance tuning
+    this.fastModel = process.env.EXPO_PUBLIC_OPENAI_FAST_MODEL || 'gpt-4o-mini';
+    this.defaultModel = process.env.EXPO_PUBLIC_OPENAI_MODEL || 'gpt-4';
+    this.fastMode = (process.env.EXPO_PUBLIC_FAST_MODE || 'true').toLowerCase() === 'true';
+    this.timeoutMs = parseInt(process.env.EXPO_PUBLIC_OPENAI_TIMEOUT_MS || '15000', 10);
+  }
+
+  // Lightweight AI classification fallback when rule-based confidence is low
+  async classifyWithAI(message) {
+    try {
+      const started = Date.now();
+      const system = 'You categorize product management related queries. Respond ONLY with a JSON object {"category":"<name>","confidence":<0-1>} choosing from predefined categories or null.';
+      const user = `Categories: brainstorming, market_sizing, scenario_planning, aligning_customer_needs_with_business_goals, user_stories, acceptance_criteria, backlog_grooming, AI_assisted_prioritization, customer_feedback_analysis, competitor_activity, industry_trends, actionable_insights_synthesis, wireframe_generation, mockup_creation, test_case_generation, iteration_with_feedback, synthetic_user_testing, persona_development, GTM_strategy, release_notes, stakeholder_communication, workflow_automation, reporting_and_metrics_generation, sprint_planning_assistance, cross_team_updates, intelligent_agent_integration, PRD_creation.\nMessage: ${message}`;
+      const response = await this.fetchWithTimeout(`${this.baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify({
+          model: this.fastMode ? this.fastModel : this.defaultModel,
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user }
+          ],
+          max_tokens: 120,
+          temperature: 0.0,
+        }),
+      }, Math.min(this.timeoutMs, 8000));
+
+      if (!response.ok) throw new Error(`OpenAI classify error: ${response.status}`);
+      const data = await response.json();
+      const raw = data.choices[0].message.content.trim();
+      try {
+        const parsed = JSON.parse(raw);
+        const latency = Date.now() - started;
+        console.log('[metrics] classify latency ms:', latency, 'tokens:', data.usage?.total_tokens || 'n/a');
+        return { category: parsed.category || null, confidence: parsed.confidence || 0 };
+      } catch (e) {
+        console.warn('Failed to parse classification JSON:', raw);
+        return { category: null, confidence: 0 };
+      }
+    } catch (error) {
+      console.error('Error in classifyWithAI:', error);
+      throw error;
+    }
+  }
+
+  async generateCategoryResponse(category, userMessage, context = {}) {
+    try {
+      const started = Date.now();
+      const { buildSystemPrompt, buildUserPrompt, postProcess } = await import('../../constants/pmPrompts.js');
+      const systemPrompt = buildSystemPrompt(category, this.fastMode);
+      const userPrompt = buildUserPrompt(category, userMessage, context);
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        ...(context.conversationHistory || []),
+        { role: 'user', content: userPrompt }
+      ];
+      const response = await this.fetchWithTimeout(`${this.baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify({
+          model: this.fastMode ? this.fastModel : this.defaultModel,
+          messages,
+          max_tokens: this.fastMode ? 600 : 1200,
+          temperature: this.fastMode ? 0.5 : 0.75,
+        }),
+      }, this.timeoutMs);
+      if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
+      const data = await response.json();
+      const text = data.choices[0].message.content;
+      const latency = Date.now() - started;
+      console.log('[metrics] category response', category, 'latency ms:', latency, 'tokens:', data.usage?.total_tokens || 'n/a');
+      return postProcess(category, text);
+    } catch (error) {
+      console.error('Error generating category response:', error);
+      throw error;
+    }
+  }
+
+  async fetchWithTimeout(url, options = {}, timeout = this.timeoutMs) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      return res;
+    } finally {
+      clearTimeout(id);
+    }
   }
 
   async generatePRD(productInfo) {
@@ -364,6 +451,7 @@ Focus on financial services industry requirements and best practices.
 
   async generateChatResponse(userMessage, context = {}) {
     try {
+      const started = Date.now();
       const { conversationHistory = [], currentTool = null, availableTools = [] } = context;
       
       let systemPrompt = `You are ProdigyPM Assistant, an AI-powered product management assistant for financial services professionals. You are helpful, professional, and knowledgeable about product management, AI tools, and financial services.
@@ -388,28 +476,33 @@ Always be helpful and guide the conversation naturally toward completing their p
         systemPrompt += `\n\nCurrently helping user with: ${currentTool}. Ask appropriate follow-up questions to gather the information needed for this tool.`;
       }
 
+      // If fast mode, bias the assistant to be concise
+      const speedDirective = this.fastMode ? '\nKeep replies concise (<= 6 sentences) and prefer bullet points.' : '';
+
       const messages = [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: systemPrompt + speedDirective },
         ...conversationHistory,
         { role: 'user', content: userMessage }
       ];
 
-      const response = await fetch(`${this.baseURL}/chat/completions`, {
+      const response = await this.fetchWithTimeout(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: this.headers,
         body: JSON.stringify({
-          model: 'gpt-4',
+          model: this.fastMode ? this.fastModel : this.defaultModel,
           messages: messages,
-          max_tokens: 500,
-          temperature: 0.7,
+          max_tokens: this.fastMode ? 256 : 500,
+          temperature: this.fastMode ? 0.4 : 0.7,
         }),
-      });
+      }, this.timeoutMs);
 
       if (!response.ok) {
         throw new Error(`OpenAI API error: ${response.status}`);
       }
 
       const data = await response.json();
+      const latency = Date.now() - started;
+      console.log('[metrics] chat response latency ms:', latency, 'tokens:', data.usage?.total_tokens || 'n/a');
       return data.choices[0].message.content;
     } catch (error) {
       console.error('Error generating chat response:', error);
@@ -428,11 +521,11 @@ The message should:
 - Be concise but friendly (2-3 sentences max)
 - Sound natural and conversational`;
 
-      const response = await fetch(`${this.baseURL}/chat/completions`, {
+      const response = await this.fetchWithTimeout(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: this.headers,
         body: JSON.stringify({
-          model: 'gpt-4',
+          model: this.fastMode ? this.fastModel : this.defaultModel,
           messages: [
             {
               role: 'system', 
@@ -443,10 +536,10 @@ The message should:
               content: prompt
             }
           ],
-          max_tokens: 150,
-          temperature: 0.8,
+          max_tokens: this.fastMode ? 80 : 150,
+          temperature: this.fastMode ? 0.5 : 0.8,
         }),
-      });
+      }, this.timeoutMs);
 
       if (!response.ok) {
         throw new Error(`OpenAI API error: ${response.status}`);

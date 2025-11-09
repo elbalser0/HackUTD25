@@ -8,6 +8,8 @@ import {
 	KeyboardAvoidingView,
 	Platform,
 	TouchableOpacity,
+  Modal,
+  FlatList,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Audio } from "expo-av";
@@ -23,6 +25,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import colors from "../constants/colors";
 import globalStyles from "../styles/globalStyles";
 import OpenAIService from "../api/openai/service";
+import { CATEGORY_DEFINITIONS, ALL_CATEGORIES } from "../constants/pmCategories";
 
 const ChatScreen = ({ navigation }) => {
 	const { user, signOut } = useAuth();
@@ -37,40 +40,50 @@ const ChatScreen = ({ navigation }) => {
 	const [ttsEnabled, setTtsEnabled] = useState(true);
 	const [isListening, setIsListening] = useState(false);
 	const [currentTranscript, setCurrentTranscript] = useState("");
+	const [recordingSeconds, setRecordingSeconds] = useState(0);
+	const recordingTimerRef = useRef(null);
+	const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+	const [categoryOverrideMessage, setCategoryOverrideMessage] = useState(null);
 	const scrollViewRef = useRef();
 	const speechRecognitionRef = useRef();
 	const recordingRef = useRef(null);
 
 	const tools = [
 		{
-			id: "strategy",
-			title: "Strategy & Ideation",
+			id: "product_strategy",
+			title: "Product Strategy & Ideation",
 			icon: "💡",
-			description: "Generate innovative product ideas",
+			description: "Brainstorming, market sizing, scenario planning, and aligning customer needs with business goals.",
 		},
 		{
-			id: "prd",
-			title: "PRD Generator",
+			id: "requirements_development",
+			title: "Requirements & Development",
 			icon: "📝",
-			description: "Create comprehensive Product Requirements Documents",
+			description: "Drafting user stories, acceptance criteria, and backlog grooming with AI-assisted clarity and prioritization.",
 		},
 		{
-			id: "backlog",
-			title: "Smart Backlog",
-			icon: "📊",
-			description: "RICE framework prioritization with AI insights",
+			id: "customer_market_research",
+			title: "Customer & Market Research",
+			icon: "�",
+			description: "Synthesizing customer feedback, competitor activity, and industry trends into actionable insights.",
 		},
 		{
-			id: "research",
-			title: "Customer Research",
-			icon: "🔍",
-			description: "Analyze customer feedback and sentiment",
+			id: "prototyping_testing",
+			title: "Prototyping & Testing",
+			icon: "🎨",
+			description: "Generating wireframes, mockups, or test cases and iterating with synthetic or real user feedback.",
 		},
 		{
-			id: "gtm",
-			title: "Go-to-Market Planning",
+			id: "go_to_market",
+			title: "Go-to-Market Execution",
 			icon: "🚀",
-			description: "Launch strategy and persona generation",
+			description: "Assisting in persona development, Go-to-Market (GTM) strategy, release notes, and stakeholder communication.",
+		},
+		{
+			id: "automation_agents",
+			title: "Automation & Intelligent Agents",
+			icon: "🤖",
+			description: "Automating repetitive Product Manager workflows such as sprint planning, reporting, and cross-team updates.",
 		},
 	];
 
@@ -311,6 +324,11 @@ const ChatScreen = ({ navigation }) => {
 			await recording.startAsync();
 			recordingRef.current = recording;
 			setIsListening(true);
+			setRecordingSeconds(0);
+			if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+			recordingTimerRef.current = setInterval(() => {
+				setRecordingSeconds((s) => s + 1);
+			}, 1000);
 			setCurrentTranscript("");
 			console.log("Recording started");
 		} catch (error) {
@@ -334,6 +352,10 @@ const ChatScreen = ({ navigation }) => {
 			const uri = recording.getURI();
 			recordingRef.current = null;
 			setIsListening(false);
+			if (recordingTimerRef.current) {
+				clearInterval(recordingTimerRef.current);
+				recordingTimerRef.current = null;
+			}
 			console.log("Recording stopped, file:", uri);
 
 			if (!uri) {
@@ -369,12 +391,19 @@ const ChatScreen = ({ navigation }) => {
 		}
 	};
 
-	const addMessage = (text, isUser = false, options = null) => {
+	const handleCancelRecording = () => {
+		if (isListening) {
+			stopListening();
+		}
+	};
+
+	const addMessage = (text, isUser = false, options = null, meta = null) => {
 		const newMessage = {
 			id: Date.now() + Math.random(),
 			text,
 			isUser,
 			options,
+			meta,
 		};
 		setMessages((prev) => [...prev, newMessage]);
 
@@ -391,19 +420,42 @@ const ChatScreen = ({ navigation }) => {
 
 	const handleOptionPress = async (option) => {
 		// Add user selection message
-		addMessage(`I'd like to use: ${option.title}`, true);
+		addMessage(`I'd like help with: ${option.title}`, true);
 
 		// Add to conversation history
 		setConversationHistory((prev) => [
 			...prev,
-			{ role: "user", content: `I'd like to use: ${option.title}` },
+			{ role: "user", content: `I'd like help with: ${option.title}` },
 		]);
 
-		// Start the conversation flow
-		await startConversationFlow(option.id);
+		// Generate AI response explaining the category group capabilities
+		try {
+			setLoading(true);
+			const aiResponse = await OpenAIService.generateChatResponse(
+				`User selected "${option.title}". Briefly explain what you can help them with in this area (2-3 sentences), then ask what specific task they'd like to work on.`,
+				{
+					conversationHistory,
+					availableTools: tools,
+				}
+			);
+			addMessage(aiResponse, false);
+			setConversationHistory((prev) => [
+				...prev,
+				{ role: "assistant", content: aiResponse },
+			]);
+		} catch (error) {
+			console.error("Error responding to category selection:", error);
+			addMessage(
+				`Great! I can help you with ${option.title}. What would you like to work on?`,
+				false
+			);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const startConversationFlow = async (toolId) => {
+		// Legacy flow support - only for old 'prd' flow trigger
 		setCurrentFlow(toolId);
 		setCurrentStep(0);
 		setFlowData({});
@@ -412,7 +464,7 @@ const ChatScreen = ({ navigation }) => {
 			setLoading(true);
 
 			// Generate AI response for starting the tool
-			const toolName = tools.find((t) => t.id === toolId)?.title;
+			const toolName = tools.find((t) => t.id === toolId)?.title || toolId;
 			const aiResponse = await OpenAIService.generateChatResponse(
 				`User wants to use ${toolName}. Start helping them with this tool.`,
 				{
@@ -422,13 +474,11 @@ const ChatScreen = ({ navigation }) => {
 				}
 			);
 
-			setTimeout(() => {
-				addMessage(aiResponse, false);
-				setConversationHistory((prev) => [
-					...prev,
-					{ role: "assistant", content: aiResponse },
-				]);
-			}, 500);
+			addMessage(aiResponse, false);
+			setConversationHistory((prev) => [
+				...prev,
+				{ role: "assistant", content: aiResponse },
+			]);
 		} catch (error) {
 			console.error("Error starting flow:", error);
 			addMessage(
@@ -442,103 +492,117 @@ const ChatScreen = ({ navigation }) => {
 
 	const handleSendMessage = async () => {
 		if (!inputText.trim()) return;
-
 		const userMessage = inputText.trim();
 		setInputText("");
 		addMessage(userMessage, true);
-
-		// Add to conversation history
-		setConversationHistory((prev) => [
-			...prev,
-			{ role: "user", content: userMessage },
-		]);
-
+		// Track user message in history
+		setConversationHistory((prev) => [...prev, { role: "user", content: userMessage }]);
 		try {
 			setLoading(true);
-
 			if (currentFlow) {
-				// Handle tool-specific conversation
 				await handleToolConversation(userMessage);
 			} else {
-				// General conversation
-				const aiResponse = await OpenAIService.generateChatResponse(
-					userMessage,
-					{
-						conversationHistory,
-						availableTools: tools,
+				// Category classification + specialized generation
+				const { classifyUserMessage } = await import("../utils/classifier.js");
+				const classification = await classifyUserMessage(userMessage);
+				console.log("Classification result", classification);
+				if (classification.category) {
+					// Map PRD_creation to existing PRD flow for a guided experience
+					if (classification.category === 'PRD_creation') {
+						await startConversationFlow('prd');
+						return;
 					}
-				);
-
-				setTimeout(() => {
-					addMessage(aiResponse, false);
+					const aiPayload = await OpenAIService.generateCategoryResponse(
+						classification.category,
+						userMessage,
+						{ conversationHistory }
+					);
+					// Attach group and source text for override/regeneration and logging
+					const group = CATEGORY_DEFINITIONS[classification.category]?.group || null;
+					addMessage(aiPayload.text, false, null, { category: classification.category, group, structured: aiPayload.structured, exportable: true, sourceUserText: userMessage, confidence: classification.confidence, via: classification.via });
 					setConversationHistory((prev) => [
 						...prev,
-						{ role: "assistant", content: aiResponse },
+						{ role: "assistant", content: aiPayload.text },
 					]);
-				}, 500);
+				} else {
+					const fallback = await OpenAIService.generateChatResponse(userMessage, {
+						conversationHistory,
+						availableTools: tools,
+					});
+					addMessage(fallback, false);
+					setConversationHistory((prev) => [
+						...prev,
+						{ role: "assistant", content: fallback },
+					]);
+				}
 			}
 		} catch (error) {
 			console.error("Error handling message:", error);
-			addMessage(
-				"I apologize, but I encountered an error. Please try again.",
-				false
-			);
+			addMessage("I apologize, but I encountered an error. Please try again.", false);
 		} finally {
 			setLoading(false);
 		}
 	};
 
+  const handleCategoryPress = (message) => {
+    setCategoryOverrideMessage(message);
+    setCategoryModalVisible(true);
+  };
+
+  const handleSelectCategory = async (newCategory) => {
+    if (!categoryOverrideMessage) return;
+    try {
+      setLoading(true);
+      const sourceText = categoryOverrideMessage.meta?.sourceUserText || '';
+      const aiPayload = await OpenAIService.generateCategoryResponse(
+        newCategory,
+        sourceText,
+        { conversationHistory }
+      );
+      const group = CATEGORY_DEFINITIONS[newCategory]?.group || null;
+      setMessages(prev => prev.map(m => m.id === categoryOverrideMessage.id ? {
+        ...m,
+        text: aiPayload.text,
+        meta: { ...(m.meta || {}), category: newCategory, group, structured: aiPayload.structured, exportable: true }
+      } : m));
+    } catch (e) {
+      Alert.alert('Category Update Failed', 'Could not regenerate the response for the selected category.');
+    } finally {
+      setLoading(false);
+      setCategoryModalVisible(false);
+      setCategoryOverrideMessage(null);
+    }
+  };
+
 	const handleToolConversation = async (userMessage) => {
 		const flow = conversationFlows[currentFlow];
 		if (!flow) return;
-
 		const currentQuestion = flow.questions[currentStep];
-
-		// Store the answer
-		const newFlowData = {
-			...flowData,
-			[currentQuestion.key]: userMessage,
-		};
+		const newFlowData = { ...flowData, [currentQuestion.key]: userMessage };
 		setFlowData(newFlowData);
-
-		// Check if we have all required data
 		const requiredFields = flow.questions
 			.filter((q) => !q.question.includes("optional"))
 			.map((q) => q.key);
 		const hasAllRequired = requiredFields.every((field) => newFlowData[field]);
-
 		if (currentStep < flow.questions.length - 1 && !hasAllRequired) {
-			// Generate AI response for next question
 			const toolName = tools.find((t) => t.id === currentFlow)?.title;
 			const nextQuestion = flow.questions[currentStep + 1];
-
 			try {
 				const aiResponse = await OpenAIService.generateChatResponse(
 					`User answered: "${userMessage}". Now ask them: ${nextQuestion.question}`,
-					{
-						conversationHistory,
-						currentTool: toolName,
-					}
+					{ conversationHistory, currentTool: toolName }
 				);
-
 				setCurrentStep(currentStep + 1);
-
-				setTimeout(() => {
-					addMessage(aiResponse, false);
-					setConversationHistory((prev) => [
-						...prev,
-						{ role: "assistant", content: aiResponse },
-					]);
-				}, 500);
+				addMessage(aiResponse, false);
+				setConversationHistory((prev) => [
+					...prev,
+					{ role: "assistant", content: aiResponse },
+				]);
 			} catch (error) {
-				// Fallback to direct question
 				setCurrentStep(currentStep + 1);
-				setTimeout(() => {
-					addMessage(`Great! ${nextQuestion.question}`, false);
-				}, 500);
+				addMessage(`Great! ${nextQuestion.question}`, false);
 			}
 		} else {
-			// All questions answered, execute the action
 			await executeFlowAction(currentFlow, newFlowData);
 		}
 	};
@@ -546,21 +610,13 @@ const ChatScreen = ({ navigation }) => {
 	const executeFlowAction = async (toolId, data) => {
 		try {
 			setLoading(true);
-
-			// Generate AI response about starting the generation
 			const toolName = tools.find((t) => t.id === toolId)?.title;
 			const startResponse = await OpenAIService.generateChatResponse(
 				`User has provided all information for ${toolName}. Tell them you're now generating their deliverable.`,
-				{
-					conversationHistory,
-					currentTool: toolName,
-				}
+				{ conversationHistory, currentTool: toolName }
 			);
-
 			addMessage(startResponse, false);
-
 			let result = "";
-
 			switch (toolId) {
 				case "strategy":
 					result = await OpenAIService.generateProductIdeas(data);
@@ -572,47 +628,31 @@ const ChatScreen = ({ navigation }) => {
 					const feedbackItems = data.feedback
 						.split("\n")
 						.filter((f) => f.trim())
-						.map((text, index) => ({
-							id: index,
-							text: text.trim(),
-							rating: null,
-						}));
+						.map((text, index) => ({ id: index, text: text.trim(), rating: null }));
 					result = await OpenAIService.analyzeFeedback(feedbackItems);
 					break;
 				case "gtm":
 					result = await OpenAIService.generateGTMPlan(data);
 					break;
+				default:
+					result = "";
 			}
-
-			// Save document to storage
 			await saveDocument(toolId, toolName, result, data);
-
-			// Generate AI response for presenting the results
 			const resultResponse = await OpenAIService.generateChatResponse(
 				`Present this generated content to the user and ask if they want to work on something else: ${result}`,
-				{
-					conversationHistory,
-					currentTool: toolName,
-				}
+				{ conversationHistory, currentTool: toolName }
 			);
-
-			setTimeout(() => {
-				addMessage(
-					`${resultResponse}\n\n---\n\n${result}`,
-					false,
-					tools.map((tool) => ({
-						id: tool.id,
-						title: tool.title,
-						icon: tool.icon,
-						description: tool.description,
-					}))
-				);
-
-				setConversationHistory((prev) => [
-					...prev,
-					{ role: "assistant", content: resultResponse },
-				]);
-			}, 1000);
+			addMessage(
+				`${resultResponse}\n\n---\n\n${result}`,
+				false,
+				tools.map((tool) => ({
+					id: tool.id,
+					title: tool.title,
+					icon: tool.icon,
+					description: tool.description,
+				}))
+			);
+			setConversationHistory((prev) => [...prev, { role: "assistant", content: resultResponse }]);
 		} catch (error) {
 			console.error("Error executing flow:", error);
 			addMessage(
@@ -629,30 +669,18 @@ const ChatScreen = ({ navigation }) => {
 
 	const saveDocument = async (type, toolName, content, data) => {
 		try {
-			// Create document object
 			const document = {
 				id: Date.now() + Math.random(),
-				type: type,
+				type,
 				title: getDocumentTitle(type, data),
-				content: content,
+				content,
 				createdAt: Date.now(),
-				toolName: toolName,
+				toolName,
 			};
-
-			// Load existing documents
-			const existingDocsJson = await AsyncStorage.getItem(
-				"prodigypm_documents"
-			);
+			const existingDocsJson = await AsyncStorage.getItem("prodigypm_documents");
 			const existingDocs = existingDocsJson ? JSON.parse(existingDocsJson) : [];
-
-			// Add new document
 			const updatedDocs = [document, ...existingDocs];
-
-			// Save back to storage
-			await AsyncStorage.setItem(
-				"prodigypm_documents",
-				JSON.stringify(updatedDocs)
-			);
+			await AsyncStorage.setItem("prodigypm_documents", JSON.stringify(updatedDocs));
 		} catch (error) {
 			console.error("Error saving document:", error);
 		}
@@ -670,6 +698,19 @@ const ChatScreen = ({ navigation }) => {
 				return `GTM Plan - ${data.name || "Go-to-Market Strategy"}`;
 			default:
 				return "Generated Document";
+		}
+	};
+
+	const handleExportMessage = async (message) => {
+		try {
+			const { exportTextToPDF } = await import("../utils/pdfExport.js");
+			const title = `ProdigyPM_${message.meta?.category || 'assistant'}_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}`;
+			const result = await exportTextToPDF({ text: message.text, title, category: message.meta?.category });
+			// Update message with pdf uri
+			setMessages(prev => prev.map(m => m.id === message.id ? { ...m, meta: { ...m.meta, pdf: result.uri, exported: true } } : m));
+		} catch (error) {
+			console.error('PDF export failed', error);
+			Alert.alert('Export Error', 'Failed to export PDF.');
 		}
 	};
 
@@ -741,6 +782,8 @@ const ChatScreen = ({ navigation }) => {
 						isUser={message.isUser}
 						onOptionPress={handleOptionPress}
 						onSpeakPress={!message.isUser ? speak : undefined}
+						onExportPress={!message.isUser && message.meta?.exportable ? handleExportMessage : undefined}
+						onCategoryPress={!message.isUser ? handleCategoryPress : undefined}
 					/>
 				))}
 
@@ -753,23 +796,50 @@ const ChatScreen = ({ navigation }) => {
 				)}
 			</ScrollView>
 
-			{/* Chat Input */}
-			<ChatInput
-				value={inputText}
-				onChangeText={setInputText}
-				onSend={handleSendMessage}
-				disabled={loading || !currentFlow}
-				placeholder={
-					currentFlow
-						? "Type your answer..."
-						: "Select a tool from the options above"
-				}
-				onMicPress={handleMicPress}
-				isListening={isListening}
-				ttsEnabled={ttsEnabled}
-				onTTSToggle={toggleTTS}
-				isSpeaking={isSpeaking}
-			/>
+			{/* Chat Input anchored at bottom */}
+			<View style={styles.inputWrapper}>
+				<ChatInput
+					value={inputText}
+					onChangeText={setInputText}
+					onSend={handleSendMessage}
+					disabled={loading}
+					placeholder={
+						currentFlow ? "Type your answer..." : (isListening ? `Listening ${formatSeconds(recordingSeconds)}` : "Select an option above")
+					}
+					onMicPress={handleMicPress}
+					isListening={isListening}
+					ttsEnabled={ttsEnabled}
+					onTTSToggle={toggleTTS}
+					isSpeaking={isSpeaking}
+          onCancelRecording={handleCancelRecording}
+				/>
+			</View>
+
+			{/* Category override modal */}
+			<Modal
+				transparent
+				visible={categoryModalVisible}
+				animationType="fade"
+				onRequestClose={() => setCategoryModalVisible(false)}
+			>
+				<View style={styles.modalBackdrop}>
+					<View style={styles.modalCard}>
+						<Text style={styles.modalTitle}>Change category</Text>
+						<FlatList
+							data={ALL_CATEGORIES}
+							keyExtractor={(item) => item}
+							renderItem={({ item }) => (
+								<TouchableOpacity style={styles.modalItem} onPress={() => handleSelectCategory(item)}>
+									<Text style={styles.modalItemText}>{item.replace(/_/g,' ')}</Text>
+								</TouchableOpacity>
+							)}
+						/>
+						<TouchableOpacity style={styles.modalCancel} onPress={() => setCategoryModalVisible(false)}>
+							<Text style={styles.modalCancelText}>Cancel</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</Modal>
 
 			{/* WebView speech recognition removed in favor of native audio recording + server transcription */}
 		</KeyboardAvoidingView>
@@ -777,6 +847,16 @@ const ChatScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+	inputWrapper: {
+		position: "absolute",
+		bottom: 0,
+		left: 0,
+		right: 0,
+		backgroundColor: colors.white,
+		borderTopWidth: 1,
+		borderTopColor: colors.border,
+		paddingBottom: Platform.OS === "ios" ? 20 : 8,
+	},
 	header: {
 		backgroundColor: colors.pnc.primary,
 		paddingHorizontal: 12,
@@ -828,6 +908,7 @@ const styles = StyleSheet.create({
 	chatContainer: {
 		flex: 1,
 		backgroundColor: colors.background.secondary,
+		paddingBottom: 100, // leave space so last messages aren't hidden behind input
 	},
 	typingIndicator: {
 		paddingHorizontal: 16,
@@ -838,6 +919,58 @@ const styles = StyleSheet.create({
 		fontStyle: "italic",
 		color: colors.text.secondary,
 	},
+	modalBackdrop: {
+		flex: 1,
+		backgroundColor: 'rgba(0,0,0,0.4)',
+		justifyContent: 'center',
+		alignItems: 'center'
+	},
+	modalCard: {
+		width: '80%',
+		maxHeight: '70%',
+		backgroundColor: colors.white,
+		borderRadius: 12,
+		padding: 16,
+		borderWidth: 1,
+		borderColor: colors.border
+	},
+	modalTitle: {
+		fontSize: 16,
+		fontWeight: '600',
+		marginBottom: 12,
+		color: colors.text.primary
+	},
+	modalItem: {
+		paddingVertical: 10,
+		paddingHorizontal: 8,
+		borderBottomWidth: 1,
+		borderBottomColor: colors.border
+	},
+	modalItemText: {
+		fontSize: 14,
+		color: colors.text.primary,
+		textTransform: 'capitalize'
+	},
+	modalCancel: {
+		marginTop: 12,
+		alignSelf: 'flex-end',
+		paddingHorizontal: 12,
+		paddingVertical: 8,
+		backgroundColor: colors.pnc.primary,
+		borderRadius: 8
+	},
+	modalCancelText: {
+		color: '#fff',
+		fontSize: 14,
+		fontWeight: '600'
+	}
 });
 
 export default ChatScreen;
+
+// util within module (kept simple; not exported)
+function formatSeconds(total) {
+	const m = Math.floor(total / 60);
+	const s = total % 60;
+	return `${m}:${s.toString().padStart(2,'0')}`;
+}

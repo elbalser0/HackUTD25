@@ -12,7 +12,8 @@ const ChatInput = ({
   isListening,
   ttsEnabled,
   onTTSToggle,
-  isSpeaking
+  isSpeaking,
+  onCancelRecording
 }) => {
   return (
     <View style={styles.container}>
@@ -26,6 +27,16 @@ const ChatInput = ({
             {isListening ? '🔴' : '🎤'}
           </Text>
         </TouchableOpacity>
+        {isListening && (
+          <TouchableOpacity
+            style={styles.cancelRecordingButton}
+            onPress={onCancelRecording}
+            accessibilityRole="button"
+            accessibilityLabel="Cancel recording"
+          >
+            <Text style={styles.cancelRecordingText}>Cancel</Text>
+          </TouchableOpacity>
+        )}
         
         <TextInput
           style={[styles.textInput, disabled && styles.disabled]}
@@ -138,6 +149,19 @@ const styles = StyleSheet.create({
   sendTextDisabled: {
     color: colors.white,
   },
+  cancelRecordingButton: {
+    marginRight: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: '#dc2626',
+    borderRadius: 16,
+    alignSelf: 'flex-end'
+  },
+  cancelRecordingText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600'
+  }
 });
 
 export default ChatInput;
