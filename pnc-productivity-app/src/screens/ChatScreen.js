@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Audio } from "expo-av";
-import * as Speech from "expo-speech";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useAuth } from "../context/AuthContext";
@@ -26,6 +25,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import colors from "../constants/colors";
 import globalStyles from "../styles/globalStyles";
 import OpenAIService from "../api/openai/service";
+import GoogleTextToSpeechService from "../api/google/textToSpeech";
 import { CATEGORY_DEFINITIONS, ALL_CATEGORIES } from "../constants/pmCategories";
 import { createDocument } from "../api/firebase/firestore";
 
@@ -50,6 +50,7 @@ const ChatScreen = ({ navigation }) => {
 	const scrollViewRef = useRef();
 	const speechRecognitionRef = useRef();
 	const recordingRef = useRef(null);
+	const currentAudioRef = useRef(null);
 
 	const tools = [
 		{
@@ -209,11 +210,16 @@ const ChatScreen = ({ navigation }) => {
 		generateWelcome();
 	}, [user]);
 
-	// Text-to-Speech functions
+	// Text-to-Speech functions using Google Cloud TTS
 	const speak = async (text) => {
-		if (!ttsEnabled || !text || isSpeaking) return;
+		console.log('[ChatScreen] speak() called:', { ttsEnabled, hasText: !!text, isSpeaking, textLength: text?.length });
+		if (!ttsEnabled || !text || isSpeaking) {
+			console.log('[ChatScreen] speak() returning early:', { ttsEnabled, hasText: !!text, isSpeaking });
+			return;
+		}
 
 		try {
+			console.log('[ChatScreen] Starting TTS for text:', text.substring(0, 50) + '...');
 			setIsSpeaking(true);
 			// Clean the text for better speech
 			const cleanText = text
@@ -223,26 +229,57 @@ const ChatScreen = ({ navigation }) => {
 				.trim();
 
 			if (cleanText) {
-				await Speech.speak(cleanText, {
-					language: "en-US",
-					pitch: 1.0,
-					rate: 0.9,
-					onDone: () => setIsSpeaking(false),
-					onStopped: () => setIsSpeaking(false),
-					onError: () => setIsSpeaking(false),
+				// Stop any currently playing audio
+				if (currentAudioRef.current) {
+					try {
+						await currentAudioRef.current.stop();
+					} catch (error) {
+						// Ignore errors when stopping previous audio
+					}
+					currentAudioRef.current = null;
+				}
+
+				// Use Google Cloud TTS
+				const audioPlayback = await GoogleTextToSpeechService.speak(cleanText, {
+					speakingRate: 0.9,
+					pitch: 0,
+					onDone: () => {
+						setIsSpeaking(false);
+						currentAudioRef.current = null;
+					},
+					onStopped: () => {
+						setIsSpeaking(false);
+						currentAudioRef.current = null;
+					},
+					onError: () => {
+						setIsSpeaking(false);
+						currentAudioRef.current = null;
+					},
 				});
+
+				currentAudioRef.current = audioPlayback;
 			} else {
 				setIsSpeaking(false);
 			}
 		} catch (error) {
 			console.error("Speech error:", error);
 			setIsSpeaking(false);
+			currentAudioRef.current = null;
 		}
 	};
 
-	const stopSpeaking = () => {
-		Speech.stop();
-		setIsSpeaking(false);
+	const stopSpeaking = async () => {
+		try {
+			if (currentAudioRef.current) {
+				await currentAudioRef.current.stop();
+				currentAudioRef.current = null;
+			}
+			await GoogleTextToSpeechService.stop();
+			setIsSpeaking(false);
+		} catch (error) {
+			console.error("Error stopping speech:", error);
+			setIsSpeaking(false);
+		}
 	};
 
 	const toggleTTS = () => {

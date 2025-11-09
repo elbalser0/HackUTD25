@@ -7,6 +7,13 @@
 **/.env
 **/secrets/
 **/config/keys.js
+# Google Cloud Service Account Keys
+**/*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!app.json
+!firestore.rules
 
 # Node modules
 node_modules/
@@ -51,4 +58,3 @@ build/
 
 # Local state
 .bash_history
-pnc-productivity-app/.env
