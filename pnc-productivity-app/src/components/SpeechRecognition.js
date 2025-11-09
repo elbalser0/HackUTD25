@@ -6,16 +6,6 @@ const { width, height } = Dimensions.get('window');
 
 const SpeechRecognitionComponent = forwardRef(({ onSpeechResult, onSpeechError, onSpeechStart, onSpeechEnd, isListening, language = 'en-US' }, ref) => {
   const webViewRef = useRef(null);
-  
-  console.log('SpeechRecognitionComponent rendered with props:', { 
-    onSpeechResult: !!onSpeechResult, 
-    onSpeechError: !!onSpeechError, 
-    onSpeechStart: !!onSpeechStart, 
-    onSpeechEnd: !!onSpeechEnd, 
-    isListening, 
-    language 
-  });
-
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -65,29 +55,17 @@ const SpeechRecognitionComponent = forwardRef(({ onSpeechResult, onSpeechError, 
             let isRecognizing = false;
             
             // Define functions at global scope first
-            function startRecognition() {
-                console.log('startRecognition called, state:', {
-                    recognition: !!recognition,
-                    isRecognizing: isRecognizing
-                });
-                
+            function startRecognition() {                
                 if (!recognition) {
-                    console.error('Recognition not initialized yet');
                     return;
                 }
                 
-                if (isRecognizing) {
-                    console.log('Already recognizing, ignoring start request');
-                    return;
+                if (isRecognizing) {                    return;
                 }
                 
-                try {
-                    console.log('Attempting to start speech recognition...');
-                    recognition.start();
-                    document.getElementById('result').innerHTML = 'Starting to listen...';
-                    console.log('Speech recognition start() called successfully');
+                try {                    recognition.start();
+                    document.getElementById('result').innerHTML = 'Starting to listen...'; called successfully');
                 } catch (error) {
-                    console.error('Error calling recognition.start():', error);
                     window.ReactNativeWebView?.postMessage(JSON.stringify({
                         type: 'error',
                         message: error.message
@@ -95,19 +73,10 @@ const SpeechRecognitionComponent = forwardRef(({ onSpeechResult, onSpeechError, 
                 }
             }
             
-            function stopRecognition() {
-                console.log('stopRecognition called, state:', {
-                    recognition: !!recognition,
-                    isRecognizing: isRecognizing
-                });
-                
+            function stopRecognition() {                
                 if (recognition && isRecognizing) {
-                    try {
-                        console.log('Attempting to stop speech recognition...');
-                        recognition.stop();
-                        console.log('Speech recognition stop() called successfully');
+                    try {                        recognition.stop(); called successfully');
                     } catch (error) {
-                        console.error('Error calling recognition.stop():', error);
                     }
                 }
             }
@@ -117,16 +86,10 @@ const SpeechRecognitionComponent = forwardRef(({ onSpeechResult, onSpeechError, 
             window.stopRecognition = stopRecognition;
             
             async function initSpeechRecognition() {
-                // Skip getUserMedia permission check since Expo already has permissions
-                console.log('Initializing speech recognition without getUserMedia check');
-                
+                // Skip getUserMedia permission check since Expo already has permissions                
                 if ('webkitSpeechRecognition' in window) {
-                    recognition = new webkitSpeechRecognition();
-                    console.log('Using webkitSpeechRecognition');
-                } else if ('SpeechRecognition' in window) {
-                    recognition = new SpeechRecognition();
-                    console.log('Using SpeechRecognition');
-                } else {
+                    recognition = new webkitSpeechRecognition();                } else if ('SpeechRecognition' in window) {
+                    recognition = new SpeechRecognition();                } else {
                     document.getElementById('status').innerHTML = 'Speech recognition not supported';
                     window.ReactNativeWebView?.postMessage(JSON.stringify({
                         type: 'error',
@@ -223,27 +186,15 @@ const SpeechRecognitionComponent = forwardRef(({ onSpeechResult, onSpeechError, 
             }
             
             // Initialize when page loads
-            window.addEventListener('load', async function() {
-                console.log('WebView loaded, initializing speech recognition');
-                try {
-                    const result = await initSpeechRecognition();
-                    console.log('Speech recognition initialization result:', result);
-                    
-                    // Test if the functions are properly defined
-                    console.log('Available functions:', {
-                        initSpeechRecognition: typeof initSpeechRecognition,
-                        startRecognition: typeof startRecognition,
-                        stopRecognition: typeof stopRecognition,
-                        recognition: !!recognition
-                    });
-                    
+            window.addEventListener('load', async function() {                try {
+                    const result = await initSpeechRecognition();                    
+                    // Test if the functions are properly defined                    
                     // Send a test message to React Native to confirm WebView is working
                     window.ReactNativeWebView?.postMessage(JSON.stringify({
                         type: 'webview-ready',
                         message: 'WebView initialized successfully'
                     }));
                 } catch (error) {
-                    console.error('Error during WebView initialization:', error);
                     window.ReactNativeWebView?.postMessage(JSON.stringify({
                         type: 'error',
                         message: 'WebView initialization failed: ' + error.message
@@ -252,49 +203,27 @@ const SpeechRecognitionComponent = forwardRef(({ onSpeechResult, onSpeechError, 
             });
             
             // Make functions available globally for React Native to call
-            window.startSpeechRecognition = function() {
-                console.log('Global startSpeechRecognition called');
-                startRecognition();
+            window.startSpeechRecognition = function() {                startRecognition();
             };
             
-            window.stopSpeechRecognition = function() {
-                console.log('Global stopSpeechRecognition called');
-                stopRecognition();
+            window.stopSpeechRecognition = function() {                stopRecognition();
             };
             
             // Listen for messages from React Native
-            document.addEventListener('message', function(event) {
-                console.log('WebView received message:', event.data);
-                try {
-                    const data = JSON.parse(event.data);
-                    console.log('Parsed data:', data);
-                    if (data.action === 'start') {
-                        console.log('Starting recognition from WebView');
-                        startRecognition();
-                    } else if (data.action === 'stop') {
-                        console.log('Stopping recognition from WebView');
-                        stopRecognition();
+            document.addEventListener('message', function(event) {                try {
+                    const data = JSON.parse(event.data);                    if (data.action === 'start') {                        startRecognition();
+                    } else if (data.action === 'stop') {                        stopRecognition();
                     }
                 } catch (error) {
-                    console.error('Error parsing message:', error);
                 }
             });
             
             // Also try window message handler as fallback
-            window.addEventListener('message', function(event) {
-                console.log('WebView received window message:', event.data);
-                try {
-                    const data = JSON.parse(event.data);
-                    console.log('Parsed window data:', data);
-                    if (data.action === 'start') {
-                        console.log('Starting recognition from window message');
-                        startRecognition();
-                    } else if (data.action === 'stop') {
-                        console.log('Stopping recognition from window message');
-                        stopRecognition();
+            window.addEventListener('message', function(event) {                try {
+                    const data = JSON.parse(event.data);                    if (data.action === 'start') {                        startRecognition();
+                    } else if (data.action === 'stop') {                        stopRecognition();
                     }
                 } catch (error) {
-                    console.error('Error parsing window message:', error);
                 }
             });
         </script>
@@ -302,86 +231,50 @@ const SpeechRecognitionComponent = forwardRef(({ onSpeechResult, onSpeechError, 
     </html>
   `;
 
-  const handleMessage = (event) => {
-    console.log('React Native received message from WebView:', event.nativeEvent.data);
-    try {
-      const data = JSON.parse(event.nativeEvent.data);
-      console.log('Parsed WebView data:', data);
-      
+  const handleMessage = (event) => {    try {
+      const data = JSON.parse(event.nativeEvent.data);      
       switch (data.type) {
-        case 'webview-ready':
-          console.log('✅ WebView is ready:', data.message);
+        case 'webview-ready':          break;
+        case 'start':          onSpeechStart && onSpeechStart();
           break;
-        case 'start':
-          console.log('Speech started');
-          onSpeechStart && onSpeechStart();
+        case 'result':          onSpeechResult && onSpeechResult(data.transcript);
           break;
-        case 'result':
-          console.log('Speech result:', data.transcript);
-          onSpeechResult && onSpeechResult(data.transcript);
+        case 'error':          onSpeechError && onSpeechError(data.message);
           break;
-        case 'error':
-          console.log('Speech error:', data.message);
-          onSpeechError && onSpeechError(data.message);
-          break;
-        case 'end':
-          console.log('Speech ended');
-          onSpeechEnd && onSpeechEnd();
+        case 'end':          onSpeechEnd && onSpeechEnd();
           break;
       }
     } catch (error) {
-      console.error('Failed to parse speech recognition data:', error);
       onSpeechError && onSpeechError('Failed to parse speech recognition data');
     }
   };
 
   // Add a WebView load handler
-  const handleWebViewLoad = () => {
-    console.log('WebView loaded successfully');
-    // Test if we can inject JavaScript
-    webViewRef.current?.injectJavaScript(`
-      console.log('JavaScript injection test successful');
-      document.getElementById('status').innerHTML = 'JavaScript injection working';
+  const handleWebViewLoad = () => {    // Test if we can inject JavaScript
+    webViewRef.current?.injectJavaScript(`      document.getElementById('status').innerHTML = 'JavaScript injection working';
       true;
     `);
   };
 
-  const startListening = () => {
-    console.log('SpeechRecognitionComponent: startListening called');
-    
+  const startListening = () => {    
     // Try direct JavaScript injection instead of postMessage
-    webViewRef.current?.injectJavaScript(`
-      console.log('Injecting JavaScript to start recognition');
-      try {
-        if (typeof startRecognition === 'function') {
-          console.log('startRecognition function found, calling it...');
-          startRecognition();
+    webViewRef.current?.injectJavaScript(`      try {
+        if (typeof startRecognition === 'function') {          startRecognition();
         } else {
-          console.error('startRecognition function not found');
-          console.log('Available functions:', Object.keys(window));
         }
       } catch (error) {
-        console.error('Error in injected JavaScript:', error);
       }
       true;
     `);
   };
 
-  const stopListening = () => {
-    console.log('SpeechRecognitionComponent: stopListening called');
-    
+  const stopListening = () => {    
     // Try direct JavaScript injection instead of postMessage
-    webViewRef.current?.injectJavaScript(`
-      console.log('Injecting JavaScript to stop recognition');
-      try {
-        if (typeof stopRecognition === 'function') {
-          console.log('stopRecognition function found, calling it...');
-          stopRecognition();
+    webViewRef.current?.injectJavaScript(`      try {
+        if (typeof stopRecognition === 'function') {          stopRecognition();
         } else {
-          console.error('stopRecognition function not found');
         }
       } catch (error) {
-        console.error('Error in injected JavaScript:', error);
       }
       true;
     `);

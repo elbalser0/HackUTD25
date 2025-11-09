@@ -12,7 +12,6 @@ const useMockAuth = process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true' ||
 let app, auth, db;
 
 if (useMockAuth) {
-  console.log('🔧 Using mock Firebase for development');
   
   // Mock Firebase app object
   app = {
@@ -45,7 +44,6 @@ if (useMockAuth) {
     })
   };
 } else {
-  console.log('🔥 Using real Firebase configuration');
   
   const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,

@@ -1,4 +1,3 @@
-// AI service for generating launch notes and GTM content
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 export const generateLaunchNotes = async (productName, features, targetAudience, launchDate) => {
@@ -51,7 +50,6 @@ export const generateLaunchNotes = async (productName, features, targetAudience,
     const data = await response.json();
     return data.choices[0].message.content;
   } catch (error) {
-    console.error('Error generating launch notes:', error);
     throw error;
   }
 };
@@ -116,7 +114,6 @@ export const generateGTMChecklist = async (productType, launchScope) => {
     const data = await response.json();
     return JSON.parse(data.choices[0].message.content);
   } catch (error) {
-    console.error('Error generating GTM checklist:', error);
     throw error;
   }
 };
@@ -165,7 +162,6 @@ export const generatePressRelease = async (productName, keyBenefits, customerQuo
     const data = await response.json();
     return data.choices[0].message.content;
   } catch (error) {
-    console.error('Error generating press release:', error);
     throw error;
   }
 };

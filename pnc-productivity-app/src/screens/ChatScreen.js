@@ -160,7 +160,6 @@ const ChatScreen = ({ navigation }) => {
 	};
 
 	useEffect(() => {
-		// Generate AI welcome message
 		const generateWelcome = async () => {
 			try {
 				setLoading(true);
@@ -185,7 +184,6 @@ const ChatScreen = ({ navigation }) => {
 				// Initialize conversation history
 				setConversationHistory([{ role: "assistant", content: welcomeText }]);
 			} catch (error) {
-				console.error("Error generating welcome:", error);
 				// Fallback message
 				const fallbackMessage = {
 					id: Date.now(),
@@ -212,14 +210,11 @@ const ChatScreen = ({ navigation }) => {
 
 	// Text-to-Speech functions using Google Cloud TTS
 	const speak = async (text) => {
-		console.log('[ChatScreen] speak() called:', { ttsEnabled, hasText: !!text, isSpeaking, textLength: text?.length });
 		if (!ttsEnabled || !text || isSpeaking) {
-			console.log('[ChatScreen] speak() returning early:', { ttsEnabled, hasText: !!text, isSpeaking });
 			return;
 		}
 
 		try {
-			console.log('[ChatScreen] Starting TTS for text:', text.substring(0, 50) + '...');
 			setIsSpeaking(true);
 			// Clean the text for better speech
 			const cleanText = text
@@ -262,7 +257,6 @@ const ChatScreen = ({ navigation }) => {
 				setIsSpeaking(false);
 			}
 		} catch (error) {
-			console.error("Speech error:", error);
 			setIsSpeaking(false);
 			currentAudioRef.current = null;
 		}
@@ -277,7 +271,6 @@ const ChatScreen = ({ navigation }) => {
 			await GoogleTextToSpeechService.stop();
 			setIsSpeaking(false);
 		} catch (error) {
-			console.error("Error stopping speech:", error);
 			setIsSpeaking(false);
 		}
 	};
@@ -301,7 +294,6 @@ const ChatScreen = ({ navigation }) => {
 	};
 
 	const handleSpeechError = (error) => {
-		console.error("Speech recognition error:", error);
 		setIsListening(false);
 		setInputText("");
 
@@ -345,7 +337,6 @@ const ChatScreen = ({ navigation }) => {
 	const startListening = async () => {
 		// New flow: record audio with expo-av, then transcribe with OpenAI
 		try {
-			console.log("Starting audio recording for transcription...");
 			const perm = await Audio.requestPermissionsAsync();
 			if (!perm.granted) {
 				Alert.alert(
@@ -377,9 +368,7 @@ const ChatScreen = ({ navigation }) => {
 				setRecordingSeconds((s) => s + 1);
 			}, 1000);
 			setCurrentTranscript("");
-			console.log("Recording started");
 		} catch (error) {
-			console.error("Error starting recording:", error);
 			setIsListening(false);
 			Alert.alert("Error", "Failed to start recording.");
 		}
@@ -394,7 +383,6 @@ const ChatScreen = ({ navigation }) => {
 				return;
 			}
 
-			console.log("Stopping recording...");
 			await recording.stopAndUnloadAsync();
 			const uri = recording.getURI();
 			recordingRef.current = null;
@@ -403,7 +391,6 @@ const ChatScreen = ({ navigation }) => {
 				clearInterval(recordingTimerRef.current);
 				recordingTimerRef.current = null;
 			}
-			console.log("Recording stopped, file:", uri);
 
 			if (!uri) {
 				Alert.alert("Error", "No audio captured.");
@@ -413,7 +400,6 @@ const ChatScreen = ({ navigation }) => {
 			// Transcribe with OpenAI
 			setLoading(true);
 			const text = await OpenAIService.transcribeAudio(uri, { language: "en" });
-			console.log("Transcription result:", text);
 			
 			if (text && text.trim()) {
 				// Automatically send the transcribed message
@@ -429,7 +415,6 @@ const ChatScreen = ({ navigation }) => {
 						// Category classification + specialized generation
 						const { classifyUserMessage } = await import("../utils/classifier.js");
 						const classification = await classifyUserMessage(text.trim());
-						console.log("Classification result", classification);
 						if (classification.category) {
 							// Map PRD_creation to existing PRD flow for a guided experience
 							if (classification.category === 'PRD_creation') {
@@ -461,14 +446,12 @@ const ChatScreen = ({ navigation }) => {
 						}
 					}
 				} catch (processingError) {
-					console.error("Error processing transcribed message:", processingError);
 					addMessage("I apologize, but I encountered an error. Please try again.", false);
 				}
 			} else {
 				setInputText("");
 			}
 		} catch (error) {
-			console.error("Error stopping/processing recording:", error);
 			Alert.alert("Transcription Error", "Could not transcribe your audio.");
 		} finally {
 			setLoading(false);
@@ -479,12 +462,9 @@ const ChatScreen = ({ navigation }) => {
 	};
 
 	const handleMicPress = () => {
-		console.log("Microphone button pressed, isListening:", isListening);
 		if (isListening) {
-			console.log("Stopping speech recognition");
 			stopListening();
 		} else {
-			console.log("Starting speech recognition");
 			startListening();
 		}
 	};
@@ -505,7 +485,6 @@ const ChatScreen = ({ navigation }) => {
 		};
 		setMessages((prev) => [...prev, newMessage]);
 
-		// Speak AI messages if TTS is enabled
 		if (!isUser && ttsEnabled) {
 			speak(text);
 		}
@@ -526,7 +505,6 @@ const ChatScreen = ({ navigation }) => {
 			{ role: "user", content: `I'd like help with: ${option.title}` },
 		]);
 
-		// Generate AI response explaining the category group capabilities
 		try {
 			setLoading(true);
 			const aiResponse = await OpenAIService.generateChatResponse(
@@ -542,7 +520,6 @@ const ChatScreen = ({ navigation }) => {
 				{ role: "assistant", content: aiResponse },
 			]);
 		} catch (error) {
-			console.error("Error responding to category selection:", error);
 			addMessage(
 				`Great! I can help you with ${option.title}. What would you like to work on?`,
 				false
@@ -561,7 +538,6 @@ const ChatScreen = ({ navigation }) => {
 		try {
 			setLoading(true);
 
-			// Generate AI response for starting the tool
 			const toolName = tools.find((t) => t.id === toolId)?.title || toolId;
 			const aiResponse = await OpenAIService.generateChatResponse(
 				`User wants to use ${toolName}. Start helping them with this tool.`,
@@ -578,7 +554,6 @@ const ChatScreen = ({ navigation }) => {
 				{ role: "assistant", content: aiResponse },
 			]);
 		} catch (error) {
-			console.error("Error starting flow:", error);
 			addMessage(
 				"I'd be happy to help you with that! Let's get started.",
 				false
@@ -603,7 +578,6 @@ const ChatScreen = ({ navigation }) => {
 				// Category classification + specialized generation
 				const { classifyUserMessage } = await import("../utils/classifier.js");
 				const classification = await classifyUserMessage(userMessage);
-				console.log("Classification result", classification);
 				if (classification.category) {
 					// Map PRD_creation to existing PRD flow for a guided experience
 					if (classification.category === 'PRD_creation') {
@@ -635,7 +609,6 @@ const ChatScreen = ({ navigation }) => {
 				}
 			}
 		} catch (error) {
-			console.error("Error handling message:", error);
 			addMessage("I apologize, but I encountered an error. Please try again.", false);
 		} finally {
 			setLoading(false);
@@ -765,15 +738,11 @@ const ChatScreen = ({ navigation }) => {
 								pdfUri: pdfResult.uri,
 							};
 							await createDocument(user.uid, pdfDocumentData);
-							console.log(`✅ PDF document saved to Firebase: ${docTitle}`);
 						} catch (saveError) {
-							console.error('Failed to save PDF to Firebase:', saveError);
 						}
 					}
 					
-					console.log(`PDF exported successfully for ${docTitle}`);
 				} catch (pdfError) {
-					console.error('Auto PDF export failed:', pdfError);
 					// Don't block the flow if PDF fails
 				}
 			}
@@ -800,7 +769,6 @@ const ChatScreen = ({ navigation }) => {
 			);
 			setConversationHistory((prev) => [...prev, { role: "assistant", content: resultResponse }]);
 		} catch (error) {
-			console.error("Error executing flow:", error);
 			addMessage(
 				"I apologize, but I encountered an error while generating your content. Please try again.",
 				false
@@ -815,7 +783,6 @@ const ChatScreen = ({ navigation }) => {
 
 	const saveDocument = async (type, toolName, content, data) => {
 		if (!user?.uid) {
-			console.error("Cannot save document: user not authenticated");
 			return;
 		}
 
@@ -828,7 +795,6 @@ const ChatScreen = ({ navigation }) => {
 			};
 			await createDocument(user.uid, documentData);
 		} catch (error) {
-			console.error("Error saving document:", error);
 		}
 	};
 
@@ -864,10 +830,8 @@ const ChatScreen = ({ navigation }) => {
 						pdfUri: result.uri,
 					};
 					await createDocument(user.uid, documentData);
-					console.log('✅ Document saved to Firebase');
 					Alert.alert('Success', 'PDF exported and saved to your documents!');
 				} catch (error) {
-					console.error('Failed to save to Firebase:', error);
 					Alert.alert('Partial Success', 'PDF exported but failed to save to cloud. You can still access it from the share dialog.');
 				}
 			}
@@ -875,7 +839,6 @@ const ChatScreen = ({ navigation }) => {
 			// Update message with pdf uri
 			setMessages(prev => prev.map(m => m.id === message.id ? { ...m, meta: { ...m.meta, pdf: result.uri, exported: true } } : m));
 		} catch (error) {
-			console.error('PDF export failed', error);
 			Alert.alert('Export Error', 'Failed to export PDF.');
 		}
 	};
@@ -1149,7 +1112,7 @@ const styles = StyleSheet.create({
 	typingBubble: {
 		backgroundColor: colors.white,
 		borderWidth: 2,
-		borderColor: colors.pnc.secondary, // PNC Orange border for AI typing
+		borderColor: colors.pnc.secondary,
 		borderRadius: 20,
 		borderBottomLeftRadius: 8,
 		paddingHorizontal: 20,

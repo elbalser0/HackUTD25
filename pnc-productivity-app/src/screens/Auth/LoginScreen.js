@@ -131,15 +131,12 @@ const LoginScreen = ({ navigation }) => {
             style={styles.registerButton}
           />
 
-          <Text style={styles.disclaimerText}>
-            This is a hackathon prototype. In production, authentication would be integrated with PNC's enterprise SSO system.
-          </Text>
         </Card>
 
         <Card style={styles.featuresCard}>
           <SectionTitle
             title="What's Inside"
-            subtitle="AI-powered tools for product management"
+            subtitle="Intelligent tools for product management"
             size="medium"
           />
 

@@ -1,13 +1,5 @@
 const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
 
-// Debug: Log API key status (DO NOT log actual key in production!)
-if (!OPENAI_API_KEY) {
-  console.error('❌ OPENAI_API_KEY is NOT loaded!');
-  console.log('Available env vars:', Object.keys(process.env).filter(k => k.startsWith('EXPO_PUBLIC')));
-} else {
-  console.log('✅ OPENAI_API_KEY loaded successfully (length:', OPENAI_API_KEY.length, ')');
-}
-
 class OpenAIService {
   constructor() {
     this.baseURL = 'https://api.openai.com/v1';
@@ -22,7 +14,6 @@ class OpenAIService {
     this.timeoutMs = parseInt(process.env.EXPO_PUBLIC_OPENAI_TIMEOUT_MS || '15000', 10);
   }
 
-  // Lightweight AI classification fallback when rule-based confidence is low
   async classifyWithAI(message) {
     try {
       const started = Date.now();
@@ -47,11 +38,8 @@ class OpenAIService {
       const raw = data.choices[0].message.content.trim();
       try {
         const parsed = JSON.parse(raw);
-        const latency = Date.now() - started;
-        console.log('[metrics] classify latency ms:', latency, 'tokens:', data.usage?.total_tokens || 'n/a');
         return { category: parsed.category || null, confidence: parsed.confidence || 0 };
       } catch (e) {
-        console.warn('Failed to parse classification JSON:', raw);
         return { category: null, confidence: 0 };
       }
     } catch (error) {
@@ -84,8 +72,6 @@ class OpenAIService {
       if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
       const data = await response.json();
       const text = data.choices[0].message.content;
-      const latency = Date.now() - started;
-      console.log('[metrics] category response', category, 'latency ms:', latency, 'tokens:', data.usage?.total_tokens || 'n/a');
       return postProcess(category, text);
     } catch (error) {
       console.error('Error generating category response:', error);
@@ -509,8 +495,6 @@ Always be helpful and guide the conversation naturally toward completing their p
       }
 
       const data = await response.json();
-      const latency = Date.now() - started;
-      console.log('[metrics] chat response latency ms:', latency, 'tokens:', data.usage?.total_tokens || 'n/a');
       return data.choices[0].message.content;
     } catch (error) {
       console.error('Error generating chat response:', error);
@@ -528,12 +512,6 @@ The message should:
 - Ask how you can help them today
 - Be concise but friendly (2-3 sentences max)
 - Sound natural and conversational`;
-
-      console.log('🔑 Making OpenAI request with key length:', OPENAI_API_KEY?.length);
-      console.log('📤 Headers:', JSON.stringify({
-        ...this.headers,
-        'Authorization': `Bearer ${OPENAI_API_KEY?.substring(0, 20)}...`
-      }));
 
       const response = await this.fetchWithTimeout(`${this.baseURL}/chat/completions`, {
         method: 'POST',
@@ -555,11 +533,7 @@ The message should:
         }),
       }, this.timeoutMs);
 
-      console.log('📥 Response status:', response.status);
-
       if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('❌ OpenAI API Error Response:', errorBody);
         throw new Error(`OpenAI API error: ${response.status}`);
       }
 

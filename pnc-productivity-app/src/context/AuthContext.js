@@ -60,7 +60,6 @@ export const AuthProvider = ({ children }) => {
       await logOut();
       // User state will be updated by the auth state listener
     } catch (error) {
-      console.log('Error signing out:', error);
       throw error;
     } finally {
       setLoading(false);

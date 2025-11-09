@@ -254,7 +254,7 @@ export function scoreCategory(message) {
   return best;
 }
 
-export const MIN_RULE_CONFIDENCE = 0.3; // threshold for fallback to AI classification
+export const MIN_RULE_CONFIDENCE = 0.3;
 
 export function computeConfidence(rawScore) {
   // Heuristic: confidence saturates at score>=5

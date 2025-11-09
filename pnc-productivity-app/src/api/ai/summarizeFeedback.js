@@ -1,4 +1,3 @@
-// AI service for summarizing customer feedback
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 export const summarizeFeedback = async (feedbackText, feedbackSource = 'customer') => {
@@ -65,7 +64,6 @@ export const summarizeFeedback = async (feedbackText, feedbackSource = 'customer
     const data = await response.json();
     return JSON.parse(data.choices[0].message.content);
   } catch (error) {
-    console.error('Error summarizing feedback:', error);
     throw error;
   }
 };
@@ -116,7 +114,6 @@ export const categorizeFeedback = async (feedbackItems) => {
     const data = await response.json();
     return JSON.parse(data.choices[0].message.content);
   } catch (error) {
-    console.error('Error categorizing feedback:', error);
     throw error;
   }
 };
@@ -161,7 +158,6 @@ export const generateInsightsFromFeedback = async (feedbackSummaries) => {
     const data = await response.json();
     return data.choices[0].message.content;
   } catch (error) {
-    console.error('Error generating insights:', error);
     throw error;
   }
 };

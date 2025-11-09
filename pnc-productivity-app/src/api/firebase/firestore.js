@@ -21,9 +21,7 @@ const useMockAuth = process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true' ||
 // PRD Operations
 export const createPRD = async (prdData) => {
   if (useMockAuth) {
-    const mockId = 'prd_' + Date.now();
-    console.log('Mock: Creating PRD with ID:', mockId);
-    return mockId;
+    const mockId = 'prd_' + Date.now();    return mockId;
   }
   
   try {
@@ -39,9 +37,7 @@ export const createPRD = async (prdData) => {
 };
 
 export const getPRDs = async (userId) => {
-  if (useMockAuth) {
-    console.log('Mock: Getting PRDs for user:', userId);
-    return [];
+  if (useMockAuth) {    return [];
   }
   
   try {
@@ -60,9 +56,7 @@ export const getPRDs = async (userId) => {
 // Backlog Operations
 export const createBacklogItem = async (backlogData) => {
   if (useMockAuth) {
-    const mockId = 'backlog_' + Date.now();
-    console.log('Mock: Creating backlog item with ID:', mockId);
-    return mockId;
+    const mockId = 'backlog_' + Date.now();    return mockId;
   }
   
   try {
@@ -78,9 +72,7 @@ export const createBacklogItem = async (backlogData) => {
 };
 
 export const getBacklog = async (workspaceId) => {
-  if (useMockAuth) {
-    console.log('Mock: Getting backlog for workspace:', workspaceId);
-    return [];
+  if (useMockAuth) {    return [];
   }
   
   try {
@@ -97,9 +89,7 @@ export const getBacklog = async (workspaceId) => {
 };
 
 export const updateBacklogItem = async (id, updateData) => {
-  if (useMockAuth) {
-    console.log('Mock: Updating backlog item:', id, updateData);
-    return Promise.resolve();
+  if (useMockAuth) {    return Promise.resolve();
   }
   
   try {
@@ -116,9 +106,7 @@ export const updateBacklogItem = async (id, updateData) => {
 // Workspace Operations
 export const createWorkspace = async (workspaceData) => {
   if (useMockAuth) {
-    const mockId = 'workspace_' + Date.now();
-    console.log('Mock: Creating workspace with ID:', mockId);
-    return mockId;
+    const mockId = 'workspace_' + Date.now();    return mockId;
   }
   
   try {
@@ -134,13 +122,11 @@ export const createWorkspace = async (workspaceData) => {
 };
 
 export const getWorkspaces = async (userId) => {
-  if (useMockAuth) {
-    console.log('Mock: Getting workspaces for user:', userId);
-    return [
+  if (useMockAuth) {    return [
       {
         id: 'demo-workspace',
         name: 'PNC Demo Project',
-        description: 'Hackathon demo workspace',
+        description: 'Sample workspace for testing',
         members: [userId],
         createdAt: new Date()
       }
@@ -162,9 +148,7 @@ export const getWorkspaces = async (userId) => {
 // Feedback Operations
 export const createFeedback = async (feedbackData) => {
   if (useMockAuth) {
-    const mockId = 'feedback_' + Date.now();
-    console.log('Mock: Creating feedback with ID:', mockId);
-    return mockId;
+    const mockId = 'feedback_' + Date.now();    return mockId;
   }
   
   try {
@@ -179,9 +163,7 @@ export const createFeedback = async (feedbackData) => {
 };
 
 export const getFeedback = async (workspaceId) => {
-  if (useMockAuth) {
-    console.log('Mock: Getting feedback for workspace:', workspaceId);
-    return [];
+  if (useMockAuth) {    return [];
   }
   
   try {
@@ -200,9 +182,7 @@ export const getFeedback = async (workspaceId) => {
 // Document Operations
 export const createDocument = async (userId, documentData) => {
   if (useMockAuth) {
-    const mockId = 'doc_' + Date.now();
-    console.log('Mock: Creating document with ID:', mockId);
-    return { id: mockId, ...documentData, userId, createdAt: new Date() };
+    const mockId = 'doc_' + Date.now();    return { id: mockId, ...documentData, userId, createdAt: new Date() };
   }
   
   try {
@@ -219,9 +199,7 @@ export const createDocument = async (userId, documentData) => {
 };
 
 export const getDocuments = async (userId) => {
-  if (useMockAuth) {
-    console.log('Mock: Getting documents for user:', userId);
-    return [];
+  if (useMockAuth) {    return [];
   }
   
   try {
@@ -260,9 +238,7 @@ export const getDocuments = async (userId) => {
 };
 
 export const deleteDocument = async (documentId) => {
-  if (useMockAuth) {
-    console.log('Mock: Deleting document:', documentId);
-    return Promise.resolve();
+  if (useMockAuth) {    return Promise.resolve();
   }
   
   try {

@@ -1,4 +1,3 @@
-// AI service for generating Product Requirements Documents
 import { PRODUCT_MANAGER_PROMPTS } from '../utils/prompts';
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -52,7 +51,6 @@ export const generatePRD = async (productIdea, targetAudience, businessGoals) =>
     const data = await response.json();
     return data.choices[0].message.content;
   } catch (error) {
-    console.error('Error generating PRD:', error);
     throw error;
   }
 };
@@ -87,7 +85,6 @@ export const generatePRDSection = async (sectionType, context) => {
     const data = await response.json();
     return data.choices[0].message.content;
   } catch (error) {
-    console.error('Error generating PRD section:', error);
     throw error;
   }
 };

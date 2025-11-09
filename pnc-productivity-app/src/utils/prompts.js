@@ -1,4 +1,3 @@
-// Product manager prompts for AI integration
 export const PRODUCT_MANAGER_PROMPTS = {
   PRD_GENERATION: `You are a senior product manager at PNC Bank with 10+ years of experience in financial services and digital product development. You understand the regulatory environment, customer needs, and business objectives specific to banking and financial services.
 

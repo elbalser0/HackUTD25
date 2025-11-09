@@ -1,4 +1,3 @@
-// AI service for prioritizing product backlog using RICE framework
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 export const prioritizeBacklog = async (backlogItems) => {
@@ -69,7 +68,6 @@ export const prioritizeBacklog = async (backlogItems) => {
     const data = await response.json();
     return JSON.parse(data.choices[0].message.content);
   } catch (error) {
-    console.error('Error prioritizing backlog:', error);
     throw error;
   }
 };
@@ -115,7 +113,6 @@ export const suggestBacklogImprovements = async (backlogItem) => {
     const data = await response.json();
     return data.choices[0].message.content;
   } catch (error) {
-    console.error('Error suggesting improvements:', error);
     throw error;
   }
 };

@@ -6,9 +6,6 @@ import { Paths, File } from 'expo-file-system';
 // Set this to your backend proxy endpoint that handles Google Cloud TTS authentication
 const TTS_PROXY_URL = process.env.EXPO_PUBLIC_TTS_PROXY_URL;
 
-// Debug: Log the TTS_PROXY_URL on module load
-console.log('[TTS] Module loaded. TTS_PROXY_URL:', TTS_PROXY_URL || 'NOT SET');
-
 class GoogleTextToSpeechService {
   constructor() {
     this.baseURL = 'https://texttospeech.googleapis.com/v1';
@@ -25,8 +22,6 @@ class GoogleTextToSpeechService {
    */
   async synthesize(text, options = {}) {
     try {
-      console.log('[TTS] Starting synthesis, TTS_PROXY_URL:', TTS_PROXY_URL ? 'Set' : 'NOT SET');
-      console.log('[TTS] Text to synthesize:', text.substring(0, 50) + '...');
       
       if (!TTS_PROXY_URL) {
         const errorMsg = 'TTS Proxy URL not configured. Please set EXPO_PUBLIC_TTS_PROXY_URL in your .env file.\n\n' +
@@ -37,7 +32,6 @@ class GoogleTextToSpeechService {
           '2. Enable Cloud Text-to-Speech API\n' +
           '3. Deploy the backend proxy (see tts-proxy-example.js)\n' +
           '4. Set EXPO_PUBLIC_TTS_PROXY_URL to your proxy URL';
-        console.error('[TTS]', errorMsg);
         throw new Error(errorMsg);
       }
 
@@ -57,9 +51,6 @@ class GoogleTextToSpeechService {
         },
       };
 
-      console.log('[TTS] Sending request to:', TTS_PROXY_URL);
-      console.log('[TTS] Request body:', JSON.stringify(requestBody).substring(0, 100) + '...');
-
       const response = await fetch(TTS_PROXY_URL, {
         method: 'POST',
         headers: {
@@ -68,22 +59,15 @@ class GoogleTextToSpeechService {
         body: JSON.stringify(requestBody),
       });
 
-      console.log('[TTS] Response status:', response.status, response.statusText);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMsg = `TTS Proxy error: ${response.status} - ${errorData.error?.message || errorData.message || response.statusText}`;
-        console.error('[TTS]', errorMsg);
-        console.error('[TTS] Error data:', errorData);
         throw new Error(errorMsg);
       }
 
       const data = await response.json();
-      console.log('[TTS] Success! Received audio content, length:', data.audioContent?.length || 0);
       return data.audioContent; // Base64 encoded audio
     } catch (error) {
-      console.error('[TTS] Error synthesizing speech:', error);
-      console.error('[TTS] Error details:', {
         message: error.message,
         stack: error.stack,
         TTS_PROXY_URL: TTS_PROXY_URL
@@ -100,7 +84,6 @@ class GoogleTextToSpeechService {
    */
   async speak(text, options = {}) {
     try {
-      console.log('[TTS] speak() called with text:', text.substring(0, 50) + '...');
       
       // Stop any currently playing audio
       if (this.currentSound) {
@@ -112,27 +95,22 @@ class GoogleTextToSpeechService {
         this.currentSound = null;
       }
 
-      console.log('[TTS] Synthesizing audio...');
       const audioContent = await this.synthesize(text, options);
-      console.log('[TTS] Audio synthesized, creating file...');
       
       // Create a temporary file using the new expo-file-system API
       // Use Paths.cache for the cache directory
       const fileName = `tts_${Date.now()}.mp3`;
       const file = new File(Paths.cache, fileName);
       const fileUri = file.uri;
-      console.log('[TTS] File URI:', fileUri);
       
       // Create the file (may throw if it already exists, but we use unique timestamp)
       try {
         file.create();
       } catch (error) {
         // File might already exist, that's okay
-        console.log('[TTS] File already exists or error creating:', error.message);
       }
       
       // Convert base64 to binary and write to file using the new API
-      console.log('[TTS] Writing audio file...');
       // Convert base64 string to Uint8Array
       const binaryString = atob(audioContent);
       const bytes = new Uint8Array(binaryString.length);
@@ -140,15 +118,12 @@ class GoogleTextToSpeechService {
         bytes[i] = binaryString.charCodeAt(i);
       }
       file.write(bytes);
-      console.log('[TTS] File written successfully');
       
       // Create and play audio using expo-av
-      console.log('[TTS] Creating audio sound object...');
       const { sound } = await Audio.Sound.createAsync(
         { uri: fileUri },
         { shouldPlay: true }
       );
-      console.log('[TTS] Audio sound created, should be playing now');
 
       this.currentSound = sound;
 
@@ -171,7 +146,6 @@ class GoogleTextToSpeechService {
           }
         }
         if (status.error) {
-          console.error('Audio playback error:', status.error);
           if (options.onError) {
             options.onError(status.error);
           }
@@ -191,18 +165,15 @@ class GoogleTextToSpeechService {
             try {
               file.delete();
             } catch (error) {
-              console.error('Error deleting file:', error);
             }
             if (options.onStopped) {
               options.onStopped();
             }
           } catch (error) {
-            console.error('Error stopping audio:', error);
           }
         },
       };
     } catch (error) {
-      console.error('Error in speak:', error);
       throw error;
     }
   }
@@ -217,7 +188,6 @@ class GoogleTextToSpeechService {
         await this.currentSound.unloadAsync();
         this.currentSound = null;
       } catch (error) {
-        console.error('Error stopping audio:', error);
       }
     }
   }
