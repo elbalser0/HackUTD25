@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   micButtonActive: {
-    backgroundColor: '#ff4444',
+    backgroundColor: colors.pnc.secondary, // PNC Orange when recording
   },
   textInput: {
     flex: 1,
@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+    backgroundColor: colors.pnc.secondary, // PNC Orange for primary action
     backgroundColor: colors.pnc.secondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: '#dc2626',
+    backgroundColor: colors.pnc.secondary, // PNC Orange
     borderRadius: 16,
     alignSelf: 'flex-end'
   },

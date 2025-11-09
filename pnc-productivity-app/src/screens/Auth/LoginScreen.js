@@ -119,6 +119,7 @@ const LoginScreen = ({ navigation }) => {
             title="Sign In"
             onPress={handleLogin}
             style={styles.loginButton}
+            noGradient
           />
 
           <Text style={styles.dividerText}>or</Text>
@@ -144,20 +145,36 @@ const LoginScreen = ({ navigation }) => {
 
           <View style={styles.featuresList}>
             <View style={styles.featureItem}>
-              <Icon name="smart-toy" size={24} color={colors.pnc.primary} style={styles.featureIcon} />
-              <Text style={styles.featureText}>AI-Generated PRDs</Text>
+              <Icon name="lightbulb-outline" size={24} color={colors.pnc.secondary} style={styles.featureIcon} />
+              <Text style={styles.featureText}>Product Strategy & Ideation</Text>
             </View>
             <View style={styles.featureItem}>
-              <Icon name="bar-chart" size={24} color={colors.pnc.primary} style={styles.featureIcon} />
-              <Text style={styles.featureText}>RICE Prioritization</Text>
+              <Icon name="description" size={24} color={colors.pnc.secondary} style={styles.featureIcon} />
+              <Text style={styles.featureText}>Requirements & PRD Generation</Text>
             </View>
             <View style={styles.featureItem}>
-              <Icon name="chat-bubble-outline" size={24} color={colors.pnc.primary} style={styles.featureIcon} />
-              <Text style={styles.featureText}>Feedback Analysis</Text>
+              <Icon name="search" size={24} color={colors.pnc.secondary} style={styles.featureIcon} />
+              <Text style={styles.featureText}>Customer & Market Research</Text>
             </View>
             <View style={styles.featureItem}>
-              <Icon name="rocket-launch" size={24} color={colors.pnc.primary} style={styles.featureIcon} />
-              <Text style={styles.featureText}>Launch Planning</Text>
+              <Icon name="palette" size={24} color={colors.pnc.secondary} style={styles.featureIcon} />
+              <Text style={styles.featureText}>Prototyping & Testing</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <Icon name="rocket-launch" size={24} color={colors.pnc.secondary} style={styles.featureIcon} />
+              <Text style={styles.featureText}>Go-to-Market Execution</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <Icon name="smart-toy" size={24} color={colors.pnc.secondary} style={styles.featureIcon} />
+              <Text style={styles.featureText}>Automation & AI Agents</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <Icon name="mic" size={24} color={colors.pnc.secondary} style={styles.featureIcon} />
+              <Text style={styles.featureText}>Voice-to-Text Transcription</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <Icon name="picture-as-pdf" size={24} color={colors.pnc.secondary} style={styles.featureIcon} />
+              <Text style={styles.featureText}>PDF Export & Document Storage</Text>
             </View>
           </View>
         </Card>
@@ -170,8 +187,8 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.pnc.primary,
     paddingHorizontal: 20,
-    paddingVertical: 20,
-    paddingTop: 60, // Account for status bar
+    paddingVertical: 6,
+    paddingTop: 50, // Reduced height
   },
   content: {
     flex: 1,
@@ -183,12 +200,12 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     marginTop: 8,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   dividerText: {
     textAlign: 'center',
     color: colors.text.secondary,
-    marginVertical: 16,
+    marginVertical: 8,
     fontSize: 16,
   },
   registerButton: {
