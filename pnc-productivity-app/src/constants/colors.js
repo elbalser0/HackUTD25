@@ -32,21 +32,22 @@ export default {
   // Status Colors
   success: '#4CAF50',
   error: '#F44336',
-  warning: '#F58025',
-  info: '#0069AA',
+  warning: '#F58025', // PNC Orange for warnings
+  info: '#0069AA', // PNC Blue for info
   
   // Background Colors
   background: {
     primary: '#FFFFFF',
     secondary: '#F5F5F5',
-    tertiary: '#E6F3FF',
-    dark: '#003D6B',
+    tertiary: '#E6F3FF', // Light PNC Blue
+    dark: '#003D6B', // Dark PNC Blue
+    orange: '#FFF5ED', // Light orange tint
   },
   
   // RICE Framework Colors
   rice: {
-    high: '#4CAF50',      // High priority - Green
-    medium: '#F58025',    // Medium priority - Orange  
+    high: '#F58025',      // High priority - PNC Orange
+    medium: '#0069AA',    // Medium priority - PNC Blue
     low: '#9E9E9E',       // Low priority - Gray
     critical: '#F44336',  // Critical - Red
   },
@@ -61,9 +62,14 @@ export default {
   // Kanban Status Colors
   kanban: {
     backlog: '#9E9E9E',
-    todo: '#0069AA',
-    inProgress: '#F58025',
-    review: '#9C27B0',
+    todo: '#0069AA', // PNC Blue
+    inProgress: '#F58025', // PNC Orange
+    review: '#003D6B', // Dark PNC Blue
     done: '#4CAF50',
-  }
+  },
+  
+  // Border Colors
+  border: '#E0E0E0',
+  borderLight: '#F0F0F0',
+  borderDark: '#BDBDBD',
 };

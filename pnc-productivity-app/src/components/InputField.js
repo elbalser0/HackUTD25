@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   inputFocused: {
-    borderColor: colors.pnc.primary,
+    borderColor: colors.pnc.secondary, // PNC Orange when focused
     borderWidth: 2,
   },
   inputError: {

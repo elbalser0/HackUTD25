@@ -131,6 +131,7 @@ const DocumentsScreen = ({ navigation }) => {
               title="Start Creating"
               onPress={() => navigation.goBack()}
               style={styles.createButton}
+              noGradient
             />
           </View>
         ) : (
@@ -158,7 +159,7 @@ const DocumentsScreen = ({ navigation }) => {
                       accessibilityRole="button"
                       accessibilityLabel="Share document"
                     >
-                      <Icon name="share" size={20} color={colors.pnc.primary} />
+                      <Icon name="share" size={20} color={colors.pnc.secondary} />
                     </TouchableOpacity>
                     
                     <TouchableOpacity 
@@ -173,7 +174,7 @@ const DocumentsScreen = ({ navigation }) => {
                     <Icon 
                       name={getDocumentIcon(document.type)} 
                       size={24} 
-                      color={colors.pnc.primary} 
+                      color={colors.pnc.secondary} 
                       style={styles.documentIcon}
                     />
                 </View>

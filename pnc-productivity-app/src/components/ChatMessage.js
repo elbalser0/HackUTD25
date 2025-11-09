@@ -6,13 +6,13 @@ import colors from '../constants/colors';
 
 // Map category groups to pill colors (fallback to neutral)
 const groupColors = {
-  product_strategy: '#0069AA',
+  product_strategy: colors.pnc.primary, // PNC Blue
   requirements_development: '#7c3aed',
   customer_market_research: '#0d9488',
-  prototyping_testing: '#db2777',
-  go_to_market: '#F58025',
+  prototyping_testing: colors.pnc.secondary, // PNC Orange
+  go_to_market: colors.pnc.secondary, // PNC Orange
   automation_agents: '#16a34a',
-  prd_creation: '#4338ca',
+  prd_creation: colors.pnc.darkBlue, // Dark PNC Blue
   default: colors.pnc.primary,
 };
 
@@ -173,8 +173,8 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: colors.gray.light,
+    borderWidth: 2,
+    borderColor: colors.pnc.secondary, // PNC Orange border for emphasis
   },
   optionIcon: {
     marginRight: 12,

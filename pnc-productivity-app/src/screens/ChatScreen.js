@@ -1073,8 +1073,8 @@ const styles = StyleSheet.create({
 	},
 	typingBubble: {
 		backgroundColor: colors.white,
-		borderWidth: 1,
-		borderColor: colors.border,
+		borderWidth: 2,
+		borderColor: colors.pnc.secondary, // PNC Orange border for AI typing
 		borderRadius: 20,
 		borderBottomLeftRadius: 8,
 		paddingHorizontal: 20,
@@ -1082,7 +1082,7 @@ const styles = StyleSheet.create({
 	},
 	typingDots: {
 		fontSize: 24,
-		color: colors.pnc.primary,
+		color: colors.pnc.secondary, // PNC Orange dots
 		letterSpacing: 2,
 	},
 	modalBackdrop: {
@@ -1122,7 +1122,7 @@ const styles = StyleSheet.create({
 		alignSelf: 'flex-end',
 		paddingHorizontal: 12,
 		paddingVertical: 8,
-		backgroundColor: colors.pnc.primary,
+		backgroundColor: colors.pnc.secondary, // PNC Orange for action button
 		borderRadius: 8
 	},
 	modalCancelText: {

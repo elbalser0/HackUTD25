@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import colors from '../constants/colors';
 
@@ -9,7 +9,8 @@ const ButtonPrimary = ({
   disabled = false, 
   loading = false, 
   style = {}, 
-  variant = 'primary' 
+  variant = 'primary',
+  noGradient = false 
 }) => {
   const getButtonColors = () => {
     if (disabled) return [colors.gray.medium, colors.gray.medium];
@@ -21,6 +22,19 @@ const ButtonPrimary = ({
         return ['transparent', 'transparent'];
       default:
         return [colors.pnc.primary, colors.pnc.secondary];
+    }
+  };
+
+  const getSolidColor = () => {
+    if (disabled) return colors.gray.medium;
+    
+    switch (variant) {
+      case 'secondary':
+        return colors.pnc.lightBlue;
+      case 'outline':
+        return 'transparent';
+      default:
+        return colors.pnc.secondary; // Use orange for solid buttons
     }
   };
 
@@ -37,6 +51,23 @@ const ButtonPrimary = ({
     style
   ];
 
+  const contentStyle = [
+    styles.gradient,
+    noGradient && { backgroundColor: getSolidColor() }
+  ];
+
+  const ButtonContent = () => (
+    <>
+      {loading ? (
+        <ActivityIndicator color={getTextColor()} />
+      ) : (
+        <Text style={[styles.text, { color: getTextColor() }]}>
+          {title}
+        </Text>
+      )}
+    </>
+  );
+
   return (
     <TouchableOpacity 
       style={buttonStyle} 
@@ -44,20 +75,20 @@ const ButtonPrimary = ({
       disabled={disabled || loading}
       activeOpacity={0.8}
     >
-      <LinearGradient
-        colors={getButtonColors()}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradient}
-      >
-        {loading ? (
-          <ActivityIndicator color={getTextColor()} />
-        ) : (
-          <Text style={[styles.text, { color: getTextColor() }]}>
-            {title}
-          </Text>
-        )}
-      </LinearGradient>
+      {noGradient ? (
+        <View style={contentStyle}>
+          <ButtonContent />
+        </View>
+      ) : (
+        <LinearGradient
+          colors={getButtonColors()}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={contentStyle}
+        >
+          <ButtonContent />
+        </LinearGradient>
+      )}
     </TouchableOpacity>
   );
 };
