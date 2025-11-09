@@ -748,11 +748,29 @@ const ChatScreen = ({ navigation }) => {
 					const { exportTextToPDF } = await import("../utils/pdfExport.js");
 					const docTitle = getDocumentTitle(toolId, data);
 					const pdfTitle = `ProdigyPM_${toolId}_${new Date().toISOString().slice(0,10)}`;
-					await exportTextToPDF({ 
+					const pdfResult = await exportTextToPDF({ 
 						text: result, 
 						title: pdfTitle,
 						category: toolId 
 					});
+					
+					// Save PDF metadata to Firebase
+					if (user?.uid && pdfResult?.uri) {
+						try {
+							const pdfDocumentData = {
+								title: docTitle,
+								content: result,
+								type: toolId,
+								category: toolId,
+								pdfUri: pdfResult.uri,
+							};
+							await createDocument(user.uid, pdfDocumentData);
+							console.log(`✅ PDF document saved to Firebase: ${docTitle}`);
+						} catch (saveError) {
+							console.error('Failed to save PDF to Firebase:', saveError);
+						}
+					}
+					
 					console.log(`PDF exported successfully for ${docTitle}`);
 				} catch (pdfError) {
 					console.error('Auto PDF export failed:', pdfError);
@@ -834,6 +852,26 @@ const ChatScreen = ({ navigation }) => {
 			const { exportTextToPDF } = await import("../utils/pdfExport.js");
 			const title = `ProdigyPM_${message.meta?.category || 'assistant'}_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}`;
 			const result = await exportTextToPDF({ text: message.text, title, category: message.meta?.category });
+			
+			// Save to Firebase
+			if (user?.uid) {
+				try {
+					const documentData = {
+						title: title,
+						content: message.text,
+						type: message.meta?.category || 'assistant',
+						category: message.meta?.category,
+						pdfUri: result.uri,
+					};
+					await createDocument(user.uid, documentData);
+					console.log('✅ Document saved to Firebase');
+					Alert.alert('Success', 'PDF exported and saved to your documents!');
+				} catch (error) {
+					console.error('Failed to save to Firebase:', error);
+					Alert.alert('Partial Success', 'PDF exported but failed to save to cloud. You can still access it from the share dialog.');
+				}
+			}
+			
 			// Update message with pdf uri
 			setMessages(prev => prev.map(m => m.id === message.id ? { ...m, meta: { ...m.meta, pdf: result.uri, exported: true } } : m));
 		} catch (error) {

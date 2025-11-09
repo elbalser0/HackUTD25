@@ -227,11 +227,12 @@ export const getDocuments = async (userId) => {
   try {
     const q = query(
       collection(db, 'documents'), 
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', userId)
+      // orderBy removed temporarily - add index in Firebase Console to enable sorting
+      // orderBy('createdAt', 'desc')
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => {
+    const docs = querySnapshot.docs.map(doc => {
       const data = doc.data();
       let createdAt = Date.now();
       if (data.createdAt) {
@@ -250,6 +251,9 @@ export const getDocuments = async (userId) => {
         createdAt
       };
     });
+    
+    // Sort in JavaScript instead of Firestore query
+    return docs.sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
     throw error;
   }
