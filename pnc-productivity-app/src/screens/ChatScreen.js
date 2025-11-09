@@ -10,6 +10,7 @@ import {
 	TouchableOpacity,
   Modal,
   FlatList,
+	Image,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Audio } from "expo-av";
@@ -784,9 +785,16 @@ const ChatScreen = ({ navigation }) => {
 
 			{/* Header */}
 			<View style={styles.header}>
-				<Text style={styles.headerTitle} numberOfLines={1}>
-					ProdigyPM Assistant
-				</Text>
+				<View style={styles.headerTitleContainer}>
+					<Image
+						source={require("../../assets/logo.png")}
+						style={styles.logo}
+						resizeMode="contain"
+					/>
+					<Text style={styles.headerTitle} numberOfLines={1}>
+						ProdigyPM Assistant
+					</Text>
+				</View>
 
 				<TouchableOpacity
 					style={styles.menuButton}
@@ -933,13 +941,22 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between", // left title, right actions
 		alignItems: "center",
 	},
+	headerTitleContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		flex: 1,
+	},
+	logo: {
+		width: 32,
+		height: 32,
+		marginRight: 8,
+	},
 	headerTitle: {
 		// move title to the left and keep vertically centered
 		fontSize: 20,
 		fontWeight: "600",
 		color: colors.white,
 		textAlign: "left",
-		marginLeft: 8,
 		alignSelf: "center",
 	},
 	menuButton: {
