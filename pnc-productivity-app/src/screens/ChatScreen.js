@@ -611,19 +611,22 @@ const ChatScreen = ({ navigation }) => {
 	const executeFlowAction = async (toolId, data) => {
 		try {
 			setLoading(true);
-			const toolName = tools.find((t) => t.id === toolId)?.title;
+			const toolName = tools.find((t) => t.id === toolId)?.title || toolId;
 			const startResponse = await OpenAIService.generateChatResponse(
 				`User has provided all information for ${toolName}. Tell them you're now generating their deliverable.`,
 				{ conversationHistory, currentTool: toolName }
 			);
 			addMessage(startResponse, false);
 			let result = "";
+			let shouldExportPDF = false;
 			switch (toolId) {
 				case "strategy":
 					result = await OpenAIService.generateProductIdeas(data);
+					shouldExportPDF = true;
 					break;
 				case "prd":
 					result = await OpenAIService.generatePRD(data);
+					shouldExportPDF = true;
 					break;
 				case "research":
 					const feedbackItems = data.feedback
@@ -631,27 +634,54 @@ const ChatScreen = ({ navigation }) => {
 						.filter((f) => f.trim())
 						.map((text, index) => ({ id: index, text: text.trim(), rating: null }));
 					result = await OpenAIService.analyzeFeedback(feedbackItems);
+					shouldExportPDF = true;
 					break;
 				case "gtm":
 					result = await OpenAIService.generateGTMPlan(data);
+					shouldExportPDF = true;
 					break;
 				default:
 					result = "";
 			}
 			await saveDocument(toolId, toolName, result, data);
+			
+			// Auto-generate PDF for important documents
+			if (shouldExportPDF && result) {
+				try {
+					const { exportTextToPDF } = await import("../utils/pdfExport.js");
+					const docTitle = getDocumentTitle(toolId, data);
+					const pdfTitle = `ProdigyPM_${toolId}_${new Date().toISOString().slice(0,10)}`;
+					await exportTextToPDF({ 
+						text: result, 
+						title: pdfTitle,
+						category: toolId 
+					});
+					console.log(`PDF exported successfully for ${docTitle}`);
+				} catch (pdfError) {
+					console.error('Auto PDF export failed:', pdfError);
+					// Don't block the flow if PDF fails
+				}
+			}
+			
 			const resultResponse = await OpenAIService.generateChatResponse(
 				`Present this generated content to the user and ask if they want to work on something else: ${result}`,
 				{ conversationHistory, currentTool: toolName }
 			);
+			
+			const resultMessage = shouldExportPDF 
+				? `${resultResponse}\n\n---\n\n${result}\n\n📄 PDF exported and ready to share!`
+				: `${resultResponse}\n\n---\n\n${result}`;
+			
 			addMessage(
-				`${resultResponse}\n\n---\n\n${result}`,
+				resultMessage,
 				false,
 				tools.map((tool) => ({
 					id: tool.id,
 					title: tool.title,
 					icon: tool.icon,
 					description: tool.description,
-				}))
+				})),
+				{ exportable: shouldExportPDF, category: toolId }
 			);
 			setConversationHistory((prev) => [...prev, { role: "assistant", content: resultResponse }]);
 		} catch (error) {
@@ -732,14 +762,15 @@ const ChatScreen = ({ navigation }) => {
 		]);
 	};
 
-	if (loading) {
+	if (loading && messages.length === 0) {
 		return <LoadingSpinner message="AI is thinking..." />;
 	}
 
 	return (
 		<KeyboardAvoidingView
 			style={globalStyles.container}
-			behavior={Platform.OS === "ios" ? "padding" : "height"}
+			behavior={Platform.OS === "ios" ? "padding" : undefined}
+			keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
 		>
 			<StatusBar style="light" backgroundColor={colors.pnc.primary} />
 
@@ -784,10 +815,10 @@ const ChatScreen = ({ navigation }) => {
 				))}
 
 				{loading && (
-					<View style={styles.typingIndicator}>
-						<Text style={styles.typingText}>
-							ProdigyPM Assistant is typing...
-						</Text>
+					<View style={styles.typingBubbleContainer}>
+						<View style={styles.typingBubble}>
+							<Text style={styles.typingDots}>●●●</Text>
+						</View>
 					</View>
 				)}
 			</ScrollView>
@@ -880,10 +911,6 @@ const ChatScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
 	inputWrapper: {
-		position: "absolute",
-		bottom: 0,
-		left: 0,
-		right: 0,
 		backgroundColor: colors.white,
 		borderTopWidth: 1,
 		borderTopColor: colors.border,
@@ -962,16 +989,25 @@ const styles = StyleSheet.create({
 	chatContainer: {
 		flex: 1,
 		backgroundColor: colors.background.secondary,
-		paddingBottom: 100, // leave space so last messages aren't hidden behind input
 	},
-	typingIndicator: {
+	typingBubbleContainer: {
 		paddingHorizontal: 16,
 		paddingVertical: 8,
+		alignItems: 'flex-start',
 	},
-	typingText: {
-		fontSize: 14,
-		fontStyle: "italic",
-		color: colors.text.secondary,
+	typingBubble: {
+		backgroundColor: colors.white,
+		borderWidth: 1,
+		borderColor: colors.border,
+		borderRadius: 20,
+		borderBottomLeftRadius: 8,
+		paddingHorizontal: 20,
+		paddingVertical: 12,
+	},
+	typingDots: {
+		fontSize: 24,
+		color: colors.pnc.primary,
+		letterSpacing: 2,
 	},
 	modalBackdrop: {
 		flex: 1,
