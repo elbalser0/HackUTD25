@@ -128,9 +128,6 @@ const DocumentsScreen = ({ navigation }) => {
               <Card key={document.id} style={styles.documentCard}>
                 <View style={styles.documentHeader}>
                   <View style={styles.documentMeta}>
-                    <Text style={styles.documentIcon}>
-                      {getDocumentIcon(document.type)}
-                    </Text>
                     <View style={styles.documentInfo}>
                       <Text style={styles.documentTitle}>{document.title}</Text>
                       <Text style={styles.documentDate}>
@@ -154,6 +151,9 @@ const DocumentsScreen = ({ navigation }) => {
                       <Text style={styles.actionIcon}>🗑️</Text>
                     </TouchableOpacity>
                   </View>
+                    <Text style={styles.documentIcon}>
+                      {getDocumentIcon(document.type)}
+                    </Text>
                 </View>
                 
                 <View style={styles.documentPreview}>
