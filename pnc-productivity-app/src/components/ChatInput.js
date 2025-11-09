@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import colors from '../constants/colors';
 
 const ChatInput = ({ 
@@ -22,10 +23,14 @@ const ChatInput = ({
           style={[styles.micButton, isListening && styles.micButtonActive]}
           onPress={onMicPress}
           disabled={disabled}
+          accessibilityRole="button"
+          accessibilityLabel={isListening ? "Stop recording" : "Start recording"}
         >
-          <Text style={styles.micIcon}>
-            {isListening ? '🔴' : '🎤'}
-          </Text>
+          <Icon 
+            name={isListening ? "radio-button-checked" : "mic"} 
+            size={18} 
+            color={colors.white} 
+          />
         </TouchableOpacity>
         {isListening && (
           <TouchableOpacity
@@ -51,20 +56,28 @@ const ChatInput = ({
         <TouchableOpacity
           style={[styles.ttsButton, isSpeaking && styles.ttsButtonActive]}
           onPress={onTTSToggle}
+          accessibilityRole="button"
+          accessibilityLabel={isSpeaking ? "Disable text-to-speech" : "Enable text-to-speech"}
         >
-          <Text style={styles.ttsIcon}>
-            {isSpeaking ? '🔇' : ttsEnabled ? '🔊' : '🔇'}
-          </Text>
+          <Icon 
+            name={isSpeaking ? "volume-off" : ttsEnabled ? "volume-up" : "volume-off"} 
+            size={18} 
+            color={colors.white} 
+          />
         </TouchableOpacity>
         
         <TouchableOpacity
           style={[styles.sendButton, (!value.trim() || disabled) && styles.sendButtonDisabled]}
           onPress={onSend}
           disabled={!value.trim() || disabled}
+          accessibilityRole="button"
+          accessibilityLabel="Send message"
         >
-          <Text style={[styles.sendText, (!value.trim() || disabled) && styles.sendTextDisabled]}>
-            →
-          </Text>
+          <Icon 
+            name="send" 
+            size={18} 
+            color={colors.white} 
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -75,7 +88,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: colors.gray.light,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -100,9 +113,6 @@ const styles = StyleSheet.create({
   micButtonActive: {
     backgroundColor: '#ff4444',
   },
-  micIcon: {
-    fontSize: 16,
-  },
   textInput: {
     flex: 1,
     fontSize: 16,
@@ -124,10 +134,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   ttsButtonActive: {
-    backgroundColor: '#ff6600',
-  },
-  ttsIcon: {
-    fontSize: 16,
+    backgroundColor: colors.pnc.secondary,
   },
   sendButton: {
     width: 32,
@@ -140,14 +147,6 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     backgroundColor: colors.text.secondary,
-  },
-  sendText: {
-    color: colors.white,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  sendTextDisabled: {
-    color: colors.white,
   },
   cancelRecordingButton: {
     marginRight: 8,

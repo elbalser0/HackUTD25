@@ -9,6 +9,7 @@ import {
   Share
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useAuth } from '../context/AuthContext';
 import { getDocuments, deleteDocument as deleteDocumentFromFirestore } from '../api/firebase/firestore';
 import Card from '../components/Card';
@@ -82,12 +83,12 @@ const DocumentsScreen = ({ navigation }) => {
 
   const getDocumentIcon = (type) => {
     switch (type) {
-      case 'strategy': return '💡';
-      case 'prd': return '📝';
-      case 'research': return '🔍';
-      case 'gtm': return '🚀';
-      case 'backlog': return '📊';
-      default: return '📄';
+      case 'strategy': return 'lightbulb-outline';
+      case 'prd': return 'description';
+      case 'research': return 'search';
+      case 'gtm': return 'rocket-launch';
+      case 'backlog': return 'bar-chart';
+      default: return 'description';
     }
   };
 
@@ -121,7 +122,7 @@ const DocumentsScreen = ({ navigation }) => {
           </View>
         ) : documents.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📄</Text>
+            <Icon name="description" size={64} color={colors.gray.medium} style={styles.emptyIcon} />
             <Text style={styles.emptyTitle}>No Documents Yet</Text>
             <Text style={styles.emptySubtitle}>
               Generate content with the AI Assistant to see your documents here.
@@ -154,20 +155,27 @@ const DocumentsScreen = ({ navigation }) => {
                     <TouchableOpacity 
                       style={styles.actionButton}
                       onPress={() => shareDocument(document)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Share document"
                     >
-                      <Text style={styles.actionIcon}>↗️</Text>
+                      <Icon name="share" size={20} color={colors.pnc.primary} />
                     </TouchableOpacity>
                     
                     <TouchableOpacity 
                       style={styles.actionButton}
                       onPress={() => deleteDocument(document.id)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Delete document"
                     >
-                      <Text style={styles.actionIcon}>🗑️</Text>
+                      <Icon name="delete" size={20} color={colors.error} />
                     </TouchableOpacity>
                   </View>
-                    <Text style={styles.documentIcon}>
-                      {getDocumentIcon(document.type)}
-                    </Text>
+                    <Icon 
+                      name={getDocumentIcon(document.type)} 
+                      size={24} 
+                      color={colors.pnc.primary} 
+                      style={styles.documentIcon}
+                    />
                 </View>
                 
                 <View style={styles.documentPreview}>
@@ -226,7 +234,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   emptyIcon: {
-    fontSize: 64,
     marginBottom: 20,
   },
   emptyTitle: {
@@ -271,7 +278,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   documentIcon: {
-    fontSize: 24,
     marginRight: 12,
   },
   documentInfo: {
@@ -293,9 +299,6 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     marginLeft: 8,
-  },
-  actionIcon: {
-    fontSize: 18,
   },
   documentPreview: {
     backgroundColor: colors.background.secondary,

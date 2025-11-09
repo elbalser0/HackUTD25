@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import colors from '../constants/colors';
 
 // Map category groups to pill colors (fallback to neutral)
@@ -38,16 +39,20 @@ const ChatMessage = ({ message, isUser, onOptionPress, onSpeakPress, onExportPre
               <TouchableOpacity
                 style={styles.speakButton}
                 onPress={() => onSpeakPress(message.text)}
+                accessibilityRole="button"
+                accessibilityLabel="Speak message"
               >
-                <Text style={styles.speakIcon}>🔊</Text>
+                <Icon name="volume-up" size={18} color={colors.pnc.primary} />
               </TouchableOpacity>
             )}
             {onExportPress && (
               <TouchableOpacity
                 style={styles.exportButton}
                 onPress={() => onExportPress(message)}
+                accessibilityRole="button"
+                accessibilityLabel="Export message"
               >
-                <Text style={styles.exportIcon}>📄</Text>
+                <Icon name="description" size={18} color={colors.pnc.primary} />
               </TouchableOpacity>
             )}
           </View>
@@ -65,7 +70,11 @@ const ChatMessage = ({ message, isUser, onOptionPress, onSpeakPress, onExportPre
                 style={styles.optionButton}
                 onPress={() => onOptionPress(option)}
               >
-                <Text style={styles.optionIcon}>{option.icon}</Text>
+                {option.iconName ? (
+                  <Icon name={option.iconName} size={20} color={colors.pnc.primary} style={styles.optionIcon} />
+                ) : (
+                  <Text style={styles.optionIcon}>{option.icon}</Text>
+                )}
                 <Text style={styles.optionText}>{option.title}</Text>
               </TouchableOpacity>
             ))}
@@ -99,7 +108,7 @@ const styles = StyleSheet.create({
   aiBubble: {
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.gray.light,
     borderBottomLeftRadius: 8,
   },
   aiHeader: {
@@ -131,15 +140,9 @@ const styles = StyleSheet.create({
     padding: 4,
     marginLeft: 8,
   },
-  speakIcon: {
-    fontSize: 14,
-  },
   exportButton: {
     padding: 4,
     marginLeft: 6,
-  },
-  exportIcon: {
-    fontSize: 14,
   },
   messageText: {
     fontSize: 16,
@@ -162,10 +165,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.gray.light,
   },
   optionIcon: {
-    fontSize: 20,
     marginRight: 12,
   },
   optionText: {

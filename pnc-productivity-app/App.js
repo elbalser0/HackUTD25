@@ -14,7 +14,7 @@ export default function App() {
         <WorkspaceProvider>
           <NavigationContainer>
             <AppNavigator />
-            <StatusBar style="light" backgroundColor="#005A9C" />
+            <StatusBar style="light" backgroundColor="#0069AA" />
           </NavigationContainer>
         </WorkspaceProvider>
       </AuthProvider>
