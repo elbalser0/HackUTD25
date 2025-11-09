@@ -2,19 +2,50 @@ import React from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import colors from '../constants/colors';
 
-const ChatInput = ({ value, onChangeText, onSend, placeholder, disabled }) => {
+const ChatInput = ({ 
+  value, 
+  onChangeText, 
+  onSend, 
+  placeholder, 
+  disabled, 
+  onMicPress, 
+  isListening,
+  ttsEnabled,
+  onTTSToggle,
+  isSpeaking
+}) => {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
+        <TouchableOpacity
+          style={[styles.micButton, isListening && styles.micButtonActive]}
+          onPress={onMicPress}
+          disabled={disabled}
+        >
+          <Text style={styles.micIcon}>
+            {isListening ? '🔴' : '🎤'}
+          </Text>
+        </TouchableOpacity>
+        
         <TextInput
           style={[styles.textInput, disabled && styles.disabled]}
           value={value}
           onChangeText={onChangeText}
-          placeholder={placeholder || "Type your response..."}
+          placeholder={isListening ? "Listening..." : (placeholder || "Type your response...")}
           placeholderTextColor={colors.text.secondary}
           multiline
-          editable={!disabled}
+          editable={!disabled && !isListening}
         />
+        
+        <TouchableOpacity
+          style={[styles.ttsButton, isSpeaking && styles.ttsButtonActive]}
+          onPress={onTTSToggle}
+        >
+          <Text style={styles.ttsIcon}>
+            {isSpeaking ? '🔇' : ttsEnabled ? '🔊' : '🔇'}
+          </Text>
+        </TouchableOpacity>
+        
         <TouchableOpacity
           style={[styles.sendButton, (!value.trim() || disabled) && styles.sendButtonDisabled]}
           onPress={onSend}
@@ -46,6 +77,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     minHeight: 44,
   },
+  micButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.pnc.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  micButtonActive: {
+    backgroundColor: '#ff4444',
+  },
+  micIcon: {
+    fontSize: 16,
+  },
   textInput: {
     flex: 1,
     fontSize: 16,
@@ -55,6 +101,22 @@ const styles = StyleSheet.create({
   },
   disabled: {
     color: colors.text.secondary,
+  },
+  ttsButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.pnc.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+    marginRight: 8,
+  },
+  ttsButtonActive: {
+    backgroundColor: '#ff6600',
+  },
+  ttsIcon: {
+    fontSize: 16,
   },
   sendButton: {
     width: 32,

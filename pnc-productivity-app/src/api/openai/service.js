@@ -459,6 +459,44 @@ The message should:
       return `Hello ${userName || 'there'}! 👋 I'm your ProdigyPM Assistant, here to help streamline your product management workflows with AI-powered tools. How can I assist you today?`;
     }
   }
+
+  // Transcribe an audio file (uri) to text using OpenAI Whisper API
+  async transcribeAudio(fileUri, options = {}) {
+    try {
+      if (!fileUri) throw new Error('No audio file provided');
+
+      const formData = new FormData();
+      formData.append('file', {
+        uri: fileUri,
+        name: 'audio.m4a',
+        type: 'audio/m4a',
+      });
+      formData.append('model', options.model || 'whisper-1');
+      if (options.language) formData.append('language', options.language);
+
+      const response = await fetch(`${this.baseURL}/audio/transcriptions`, {
+        method: 'POST',
+        headers: {
+          // Let fetch set the multipart boundary automatically
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        console.error('Transcription API error:', response.status, body);
+        throw new Error(`OpenAI Transcription error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      // Whisper returns { text: string }
+      return data.text || '';
+    } catch (error) {
+      console.error('Error transcribing audio:', error);
+      throw error;
+    }
+  }
 }
 
 export default new OpenAIService();

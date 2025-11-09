@@ -14,10 +14,19 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "This app uses the microphone for voice input and speech recognition.",
+        "NSSpeechRecognitionUsageDescription": "This app uses speech recognition to convert your voice to text for AI conversations."
+      }
     },
     "android": {
-      "backgroundColor": "#005A9C"
-    }
+      "backgroundColor": "#005A9C",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.INTERNET"
+      ]
+    },
+    "plugins": []
   }
 }

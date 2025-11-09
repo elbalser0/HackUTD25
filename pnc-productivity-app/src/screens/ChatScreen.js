@@ -10,6 +10,7 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +18,8 @@ import ChatMessage from '../components/ChatMessage';
 import ChatInput from '../components/ChatInput';
 import ButtonPrimary from '../components/ButtonPrimary';
 import LoadingSpinner from '../components/LoadingSpinner';
+// Deprecated WebView speech component (not functional on mobile); retained for fallback removal later
+// import SpeechRecognitionComponent from '../components/SpeechRecognition';
 import colors from '../constants/colors';
 import globalStyles from '../styles/globalStyles';
 import OpenAIService from '../api/openai/service';
@@ -32,7 +35,11 @@ const ChatScreen = ({ navigation }) => {
   const [conversationHistory, setConversationHistory] = useState([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+  const [currentTranscript, setCurrentTranscript] = useState('');
   const scrollViewRef = useRef();
+  const speechRecognitionRef = useRef();
+  const recordingRef = useRef(null);
 
   const tools = [
     {
@@ -195,6 +202,139 @@ const ChatScreen = ({ navigation }) => {
       stopSpeaking();
     }
     setTtsEnabled(!ttsEnabled);
+  };
+
+  // Real Speech Recognition functions using WebView
+  const handleSpeechStart = () => {
+    setIsListening(true);
+    setInputText('🎤 Listening...');
+  };
+
+  const handleSpeechResult = (transcript) => {
+    setInputText(transcript);
+    setCurrentTranscript(transcript);
+  };
+
+  const handleSpeechError = (error) => {
+    console.error('Speech recognition error:', error);
+    setIsListening(false);
+    setInputText('');
+    
+    let title = 'Speech Error';
+    let message = '';
+    
+    switch(error) {
+      case 'microphone-permission-denied':
+        title = 'Microphone Permission Required';
+        message = 'Please allow microphone access in your browser settings to use speech recognition.';
+        break;
+      case 'network-error':
+        title = 'Network Error';
+        message = 'Please check your internet connection and try again.';
+        break;
+      case 'audio-capture-failed':
+        title = 'Audio Capture Failed';
+        message = 'Unable to access microphone. Please check your device settings.';
+        break;
+      case 'no-speech-detected':
+        title = 'No Speech Detected';
+        message = 'Try speaking louder or closer to the microphone.';
+        break;
+      case 'Speech recognition not supported':
+        title = 'Feature Not Available';
+        message = 'Speech recognition is not supported on this device.';
+        break;
+      default:
+        message = `Speech recognition failed: ${error}`;
+    }
+    
+    Alert.alert(title, message);
+  };
+
+  const handleSpeechEnd = () => {
+    setIsListening(false);
+  };
+
+  const startListening = async () => {
+    // New flow: record audio with expo-av, then transcribe with OpenAI
+    try {
+      console.log('Starting audio recording for transcription...');
+      const perm = await Audio.requestPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('Microphone Permission', 'Please allow microphone access to use voice input.');
+        return;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        interruptionModeIOS: 1,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+
+      const recording = new Audio.Recording();
+      await recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
+      await recording.startAsync();
+      recordingRef.current = recording;
+      setIsListening(true);
+      setCurrentTranscript('');
+      console.log('Recording started');
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      setIsListening(false);
+      Alert.alert('Error', 'Failed to start recording.');
+    }
+  };
+
+  const stopListening = async () => {
+    // New flow: stop recording and transcribe
+    try {
+      const recording = recordingRef.current;
+      if (!recording) {
+        setIsListening(false);
+        return;
+      }
+
+      console.log('Stopping recording...');
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      recordingRef.current = null;
+      setIsListening(false);
+      console.log('Recording stopped, file:', uri);
+
+      if (!uri) {
+        Alert.alert('Error', 'No audio captured.');
+        return;
+      }
+
+      // Transcribe with OpenAI
+      setLoading(true);
+      const text = await OpenAIService.transcribeAudio(uri, { language: 'en' });
+      console.log('Transcription result:', text);
+      setInputText(text || '');
+      setCurrentTranscript(text || '');
+    } catch (error) {
+      console.error('Error stopping/processing recording:', error);
+      Alert.alert('Transcription Error', 'Could not transcribe your audio.');
+    } finally {
+      setLoading(false);
+      try {
+        await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      } catch {}
+    }
+  };
+
+  const handleMicPress = () => {
+    console.log('Microphone button pressed, isListening:', isListening);
+    if (isListening) {
+      console.log('Stopping speech recognition');
+      stopListening();
+    } else {
+      console.log('Starting speech recognition');
+      startListening();
+    }
   };
 
   const addMessage = (text, isUser = false, options = null) => {
@@ -516,18 +656,6 @@ const ChatScreen = ({ navigation }) => {
         
         <View style={styles.headerActions}>
           <TouchableOpacity
-            style={[styles.ttsButton, isSpeaking && styles.ttsButtonActive]}
-            onPress={isSpeaking ? stopSpeaking : toggleTTS}
-          >
-            <Text style={styles.ttsIcon}>
-              {isSpeaking ? '🔇' : ttsEnabled ? '🔊' : '🔇'}
-            </Text>
-            <Text style={styles.ttsText}>
-              {isSpeaking ? 'Stop' : ttsEnabled ? 'TTS' : 'TTS'}
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
             style={styles.documentsButton}
             onPress={() => navigation.navigate('Documents')}
           >
@@ -575,7 +703,14 @@ const ChatScreen = ({ navigation }) => {
         onSend={handleSendMessage}
         disabled={loading || !currentFlow}
         placeholder={currentFlow ? "Type your answer..." : "Select a tool from the options above"}
+        onMicPress={handleMicPress}
+        isListening={isListening}
+        ttsEnabled={ttsEnabled}
+        onTTSToggle={toggleTTS}
+        isSpeaking={isSpeaking}
       />
+      
+      {/* WebView speech recognition removed in favor of native audio recording + server transcription */}
     </KeyboardAvoidingView>
   );
 };
@@ -599,27 +734,6 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  ttsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  ttsButtonActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  ttsIcon: {
-    fontSize: 16,
-    marginRight: 4,
-  },
-  ttsText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.white,
   },
   documentsButton: {
     flexDirection: 'row',
