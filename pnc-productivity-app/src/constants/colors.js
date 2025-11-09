@@ -32,8 +32,8 @@ export default {
   // Status Colors
   success: '#4CAF50',
   error: '#F44336',
-  warning: '#FF9800',
-  info: '#2196F3',
+  warning: '#F58025',
+  info: '#0069AA',
   
   // Background Colors
   background: {
@@ -46,7 +46,7 @@ export default {
   // RICE Framework Colors
   rice: {
     high: '#4CAF50',      // High priority - Green
-    medium: '#FF9800',    // Medium priority - Orange  
+    medium: '#F58025',    // Medium priority - Orange  
     low: '#9E9E9E',       // Low priority - Gray
     critical: '#F44336',  // Critical - Red
   },
@@ -61,8 +61,8 @@ export default {
   // Kanban Status Colors
   kanban: {
     backlog: '#9E9E9E',
-    todo: '#2196F3',
-    inProgress: '#FF9800',
+    todo: '#0069AA',
+    inProgress: '#F58025',
     review: '#9C27B0',
     done: '#4CAF50',
   }

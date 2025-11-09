@@ -40,7 +40,7 @@ const SpeechRecognitionComponent = forwardRef(({ onSpeechResult, onSpeechError, 
                 color: #333;
             }
             .listening {
-                color: #ff4444;
+                color: #F58025;
                 font-weight: bold;
             }
             .result {
