@@ -1,5 +1,13 @@
 const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
 
+// Debug: Log API key status (DO NOT log actual key in production!)
+if (!OPENAI_API_KEY) {
+  console.error('❌ OPENAI_API_KEY is NOT loaded!');
+  console.log('Available env vars:', Object.keys(process.env).filter(k => k.startsWith('EXPO_PUBLIC')));
+} else {
+  console.log('✅ OPENAI_API_KEY loaded successfully (length:', OPENAI_API_KEY.length, ')');
+}
+
 class OpenAIService {
   constructor() {
     this.baseURL = 'https://api.openai.com/v1';
@@ -521,6 +529,12 @@ The message should:
 - Be concise but friendly (2-3 sentences max)
 - Sound natural and conversational`;
 
+      console.log('🔑 Making OpenAI request with key length:', OPENAI_API_KEY?.length);
+      console.log('📤 Headers:', JSON.stringify({
+        ...this.headers,
+        'Authorization': `Bearer ${OPENAI_API_KEY?.substring(0, 20)}...`
+      }));
+
       const response = await this.fetchWithTimeout(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: this.headers,
@@ -541,7 +555,11 @@ The message should:
         }),
       }, this.timeoutMs);
 
+      console.log('📥 Response status:', response.status);
+
       if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('❌ OpenAI API Error Response:', errorBody);
         throw new Error(`OpenAI API error: ${response.status}`);
       }
 
