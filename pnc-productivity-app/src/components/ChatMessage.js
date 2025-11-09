@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Markdown from 'react-native-markdown-display';
 import colors from '../constants/colors';
 
 // Map category groups to pill colors (fallback to neutral)
@@ -58,9 +59,17 @@ const ChatMessage = ({ message, isUser, onOptionPress, onSpeakPress, onExportPre
           </View>
         )}
 
-        <Text style={[styles.messageText, isUser ? styles.userText : styles.aiText]}>
-          {message.text}
-        </Text>
+        {isUser ? (
+          <Text style={[styles.messageText, styles.userText]}>
+            {message.text}
+          </Text>
+        ) : (
+          <Markdown
+            style={markdownStyles(false)}
+          >
+            {message.text}
+          </Markdown>
+        )}
 
         {message.options && message.options.length > 0 && (
           <View style={styles.optionsContainer}>
@@ -177,5 +186,167 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
+// Markdown styling function
+const markdownStyles = (isUser) => {
+  const baseTextColor = isUser ? colors.white : colors.text.primary;
+  const baseTextSize = 16;
+  const baseLineHeight = 22;
+
+  return {
+    body: {
+      color: baseTextColor,
+      fontSize: baseTextSize,
+      lineHeight: baseLineHeight,
+    },
+    paragraph: {
+      marginTop: 0,
+      marginBottom: 12,
+      color: baseTextColor,
+      fontSize: baseTextSize,
+      lineHeight: baseLineHeight,
+    },
+    heading1: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: baseTextColor,
+      marginTop: 16,
+      marginBottom: 8,
+      lineHeight: 30,
+    },
+    heading2: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: baseTextColor,
+      marginTop: 14,
+      marginBottom: 8,
+      lineHeight: 26,
+    },
+    heading3: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: baseTextColor,
+      marginTop: 12,
+      marginBottom: 6,
+      lineHeight: 24,
+    },
+    heading4: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: baseTextColor,
+      marginTop: 10,
+      marginBottom: 6,
+      lineHeight: 22,
+    },
+    heading5: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: baseTextColor,
+      marginTop: 8,
+      marginBottom: 4,
+      lineHeight: 20,
+    },
+    heading6: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: baseTextColor,
+      marginTop: 6,
+      marginBottom: 4,
+      lineHeight: 18,
+    },
+    strong: {
+      fontWeight: '700',
+      color: baseTextColor,
+    },
+    em: {
+      fontStyle: 'italic',
+      color: baseTextColor,
+    },
+    code_inline: {
+      backgroundColor: isUser ? 'rgba(255, 255, 255, 0.2)' : colors.gray.light,
+      color: baseTextColor,
+      fontSize: baseTextSize - 2,
+      paddingHorizontal: 4,
+      paddingVertical: 2,
+      borderRadius: 4,
+      fontFamily: 'monospace',
+    },
+    code_block: {
+      backgroundColor: isUser ? 'rgba(255, 255, 255, 0.2)' : colors.gray.light,
+      color: baseTextColor,
+      fontSize: baseTextSize - 2,
+      padding: 12,
+      borderRadius: 8,
+      marginVertical: 8,
+      fontFamily: 'monospace',
+      overflow: 'hidden',
+    },
+    fence: {
+      backgroundColor: isUser ? 'rgba(255, 255, 255, 0.2)' : colors.gray.light,
+      color: baseTextColor,
+      fontSize: baseTextSize - 2,
+      padding: 12,
+      borderRadius: 8,
+      marginVertical: 8,
+      fontFamily: 'monospace',
+      overflow: 'hidden',
+    },
+    blockquote: {
+      borderLeftWidth: 4,
+      borderLeftColor: isUser ? 'rgba(255, 255, 255, 0.5)' : colors.pnc.primary,
+      paddingLeft: 12,
+      marginVertical: 8,
+      color: baseTextColor,
+      fontStyle: 'italic',
+    },
+    list_item: {
+      color: baseTextColor,
+      fontSize: baseTextSize,
+      lineHeight: baseLineHeight,
+      marginBottom: 4,
+    },
+    bullet_list: {
+      marginVertical: 8,
+    },
+    ordered_list: {
+      marginVertical: 8,
+    },
+    link: {
+      color: isUser ? colors.white : colors.pnc.primary,
+      textDecorationLine: 'underline',
+    },
+    hr: {
+      backgroundColor: isUser ? 'rgba(255, 255, 255, 0.3)' : colors.gray.medium,
+      height: 1,
+      marginVertical: 16,
+    },
+    table: {
+      marginVertical: 8,
+      borderWidth: 1,
+      borderColor: isUser ? 'rgba(255, 255, 255, 0.3)' : colors.gray.medium,
+      borderRadius: 4,
+    },
+    thead: {
+      backgroundColor: isUser ? 'rgba(255, 255, 255, 0.2)' : colors.gray.light,
+    },
+    th: {
+      padding: 8,
+      fontWeight: '600',
+      color: baseTextColor,
+      borderBottomWidth: 1,
+      borderBottomColor: isUser ? 'rgba(255, 255, 255, 0.3)' : colors.gray.medium,
+    },
+    td: {
+      padding: 8,
+      color: baseTextColor,
+      borderBottomWidth: 1,
+      borderBottomColor: isUser ? 'rgba(255, 255, 255, 0.2)' : colors.gray.light,
+    },
+    tr: {
+      borderBottomWidth: 1,
+      borderBottomColor: isUser ? 'rgba(255, 255, 255, 0.2)' : colors.gray.light,
+    },
+  };
+};
 
 export default ChatMessage;
