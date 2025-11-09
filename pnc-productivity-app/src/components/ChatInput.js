@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.pnc.primary,
+    backgroundColor: colors.pnc.secondary,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 8,
