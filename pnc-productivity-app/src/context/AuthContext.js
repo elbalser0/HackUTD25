@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createUser as createFirebaseUser, signIn as signInFirebase, logOut, onAuthStateChange } from '../api/firebase/auth';
 
 const AuthContext = createContext({});
 
@@ -17,60 +17,71 @@ export const AuthProvider = ({ children }) => {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Mock authentication - check if user was previously logged in
-    const checkAuthState = async () => {
-      try {
-        const savedUser = await AsyncStorage.getItem('@user');
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
-      } catch (error) {
-        console.log('Error reading auth state:', error);
-      } finally {
-        setLoading(false);
-        setInitialized(true);
+    // Listen to Firebase auth state changes
+    const unsubscribe = onAuthStateChange((firebaseUser) => {
+      if (firebaseUser) {
+        // Map Firebase user to our user object
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          photoURL: firebaseUser.photoURL,
+        });
+      } else {
+        setUser(null);
       }
-    };
+      setLoading(false);
+      setInitialized(true);
+    });
 
-    checkAuthState();
+    return () => unsubscribe();
   }, []);
 
   const signIn = async (email, password) => {
     setLoading(true);
-    // Mock authentication
-    const mockUser = {
-      uid: 'demo-user-' + Date.now(),
-      email: email,
-      displayName: email.split('@')[0],
-      photoURL: null,
-    };
-    
     try {
-      await AsyncStorage.setItem('@user', JSON.stringify(mockUser));
-      setUser(mockUser);
-      return mockUser;
+      const firebaseUser = await signInFirebase(email, password);
+      // User state will be updated by the auth state listener
+      return {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+        photoURL: firebaseUser.photoURL,
+      };
     } catch (error) {
-      throw new Error('Mock login failed');
-    } finally {
       setLoading(false);
+      throw error;
     }
   };
 
   const signOut = async () => {
     setLoading(true);
     try {
-      await AsyncStorage.removeItem('@user');
-      setUser(null);
+      await logOut();
+      // User state will be updated by the auth state listener
     } catch (error) {
       console.log('Error signing out:', error);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
   const createUser = async (email, password) => {
-    // Mock user creation
-    return await signIn(email, password);
+    setLoading(true);
+    try {
+      const firebaseUser = await createFirebaseUser(email, password);
+      // User state will be updated by the auth state listener
+      return {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+        photoURL: firebaseUser.photoURL,
+      };
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   const value = {

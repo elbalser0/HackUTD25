@@ -25,6 +25,7 @@ import colors from "../constants/colors";
 import globalStyles from "../styles/globalStyles";
 import OpenAIService from "../api/openai/service";
 import { CATEGORY_DEFINITIONS, ALL_CATEGORIES } from "../constants/pmCategories";
+import { createDocument } from "../api/firebase/firestore";
 
 const ChatScreen = ({ navigation }) => {
 	const { user, signOut } = useAuth();
@@ -668,19 +669,19 @@ const ChatScreen = ({ navigation }) => {
 	};
 
 	const saveDocument = async (type, toolName, content, data) => {
+		if (!user?.uid) {
+			console.error("Cannot save document: user not authenticated");
+			return;
+		}
+
 		try {
-			const document = {
-				id: Date.now() + Math.random(),
+			const documentData = {
 				type,
 				title: getDocumentTitle(type, data),
 				content,
-				createdAt: Date.now(),
 				toolName,
 			};
-			const existingDocsJson = await AsyncStorage.getItem("prodigypm_documents");
-			const existingDocs = existingDocsJson ? JSON.parse(existingDocsJson) : [];
-			const updatedDocs = [document, ...existingDocs];
-			await AsyncStorage.setItem("prodigypm_documents", JSON.stringify(updatedDocs));
+			await createDocument(user.uid, documentData);
 		} catch (error) {
 			console.error("Error saving document:", error);
 		}
