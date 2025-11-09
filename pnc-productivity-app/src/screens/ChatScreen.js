@@ -241,7 +241,7 @@ const ChatScreen = ({ navigation }) => {
 
 				// Use Google Cloud TTS
 				const audioPlayback = await GoogleTextToSpeechService.speak(cleanText, {
-					speakingRate: 0.9,
+					speakingRate: 1.5,
 					pitch: 0,
 					onDone: () => {
 						setIsSpeaking(false);

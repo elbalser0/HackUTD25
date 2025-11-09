@@ -51,7 +51,7 @@ class GoogleTextToSpeechService {
         },
         audioConfig: {
           audioEncoding: 'MP3',
-          speakingRate: options.speakingRate || 0.9,
+          speakingRate: options.speakingRate || 1.5,
           pitch: options.pitch || 0,
           volumeGainDb: options.volumeGainDb || 0,
         },
