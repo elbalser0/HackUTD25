@@ -376,8 +376,59 @@ const ChatScreen = ({ navigation }) => {
 			setLoading(true);
 			const text = await OpenAIService.transcribeAudio(uri, { language: "en" });
 			console.log("Transcription result:", text);
-			setInputText(text || "");
-			setCurrentTranscript(text || "");
+			
+			if (text && text.trim()) {
+				// Automatically send the transcribed message
+				setInputText("");
+				addMessage(text.trim(), true);
+				setConversationHistory((prev) => [...prev, { role: "user", content: text.trim() }]);
+				
+				// Process the message
+				try {
+					if (currentFlow) {
+						await handleToolConversation(text.trim());
+					} else {
+						// Category classification + specialized generation
+						const { classifyUserMessage } = await import("../utils/classifier.js");
+						const classification = await classifyUserMessage(text.trim());
+						console.log("Classification result", classification);
+						if (classification.category) {
+							// Map PRD_creation to existing PRD flow for a guided experience
+							if (classification.category === 'PRD_creation') {
+								await startConversationFlow('prd');
+								return;
+							}
+							const aiPayload = await OpenAIService.generateCategoryResponse(
+								classification.category,
+								text.trim(),
+								{ conversationHistory }
+							);
+							// Attach group and source text for override/regeneration and logging
+							const group = CATEGORY_DEFINITIONS[classification.category]?.group || null;
+							addMessage(aiPayload.text, false, null, { category: classification.category, group, structured: aiPayload.structured, exportable: true, sourceUserText: text.trim(), confidence: classification.confidence, via: classification.via });
+							setConversationHistory((prev) => [
+								...prev,
+								{ role: "assistant", content: aiPayload.text },
+							]);
+						} else {
+							const fallback = await OpenAIService.generateChatResponse(text.trim(), {
+								conversationHistory,
+								availableTools: tools,
+							});
+							addMessage(fallback, false);
+							setConversationHistory((prev) => [
+								...prev,
+								{ role: "assistant", content: fallback },
+							]);
+						}
+					}
+				} catch (processingError) {
+					console.error("Error processing transcribed message:", processingError);
+					addMessage("I apologize, but I encountered an error. Please try again.", false);
+				}
+			} else {
+				setInputText("");
+			}
 		} catch (error) {
 			console.error("Error stopping/processing recording:", error);
 			Alert.alert("Transcription Error", "Could not transcribe your audio.");
