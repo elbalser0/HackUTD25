@@ -140,11 +140,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-<<<<<<< HEAD
     backgroundColor: colors.pnc.secondary,
-=======
-    backgroundColor: colors.pnc.primary,
->>>>>>> ead298cc58f3a2f002fb80bdd62f1cce35aecc91
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 8,

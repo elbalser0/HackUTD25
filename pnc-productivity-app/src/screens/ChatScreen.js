@@ -10,10 +10,7 @@ import {
 	TouchableOpacity,
   Modal,
   FlatList,
-<<<<<<< HEAD
 	Image,
-=======
->>>>>>> ead298cc58f3a2f002fb80bdd62f1cce35aecc91
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Audio } from "expo-av";
@@ -839,7 +836,6 @@ const ChatScreen = ({ navigation }) => {
 
 			{/* Header */}
 			<View style={styles.header}>
-<<<<<<< HEAD
 				<View style={styles.headerTitleContainer}>
 					<Image
 						source={require("../../assets/logo.png")}
@@ -850,11 +846,6 @@ const ChatScreen = ({ navigation }) => {
 						ProdigyPM Assistant
 					</Text>
 				</View>
-=======
-				<Text style={styles.headerTitle} numberOfLines={1}>
-					ProdigyPM Assistant
-				</Text>
->>>>>>> ead298cc58f3a2f002fb80bdd62f1cce35aecc91
 
 				<TouchableOpacity
 					style={styles.menuButton}
@@ -1001,7 +992,6 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between", // left title, right actions
 		alignItems: "center",
 	},
-<<<<<<< HEAD
 	headerTitleContainer: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -1012,18 +1002,12 @@ const styles = StyleSheet.create({
 		height: 32,
 		marginRight: 8,
 	},
-=======
->>>>>>> ead298cc58f3a2f002fb80bdd62f1cce35aecc91
 	headerTitle: {
 		// move title to the left and keep vertically centered
 		fontSize: 20,
 		fontWeight: "600",
 		color: colors.white,
 		textAlign: "left",
-<<<<<<< HEAD
-=======
-		marginLeft: 8,
->>>>>>> ead298cc58f3a2f002fb80bdd62f1cce35aecc91
 		alignSelf: "center",
 	},
 	menuButton: {
