@@ -92,6 +92,16 @@ npx expo start --tunnel
 When using real Firebase, the app will create these collections:
 
 ```
+📁 documents/
+   └── 📄 {document-id}
+       ├── type: string (strategy, prd, research, gtm, backlog)
+       ├── title: string
+       ├── content: string
+       ├── toolName: string
+       ├── userId: string
+       ├── createdAt: timestamp
+       └── updatedAt: timestamp
+
 📁 prds/
    └── 📄 {prd-id}
        ├── title: string
@@ -110,7 +120,8 @@ When using real Firebase, the app will create these collections:
        ├── impact: number
        ├── confidence: number
        ├── effort: number
-       └── createdAt: timestamp
+       ├── createdAt: timestamp
+       └── updatedAt: timestamp
 
 📁 workspaces/
    └── 📄 {workspace-id}
@@ -129,37 +140,50 @@ When using real Firebase, the app will create these collections:
        └── createdAt: timestamp
 ```
 
-## 🔒 Security Rules (For Production)
+## 🔒 Security Rules
 
-After your hackathon, update Firestore security rules:
+**IMPORTANT:** You must set up Firestore security rules to protect user data. Copy the rules from `firestore.rules` file in your project root and paste them into your Firebase Console.
+
+### How to Set Up Security Rules:
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project
+3. Go to **Firestore Database** > **Rules** tab
+4. Copy the contents of `firestore.rules` from your project
+5. Paste into the Firebase Console rules editor
+6. Click **Publish**
+
+### Security Rules Overview:
+
+The rules enforce:
+
+- **Documents Collection**: Users can only access their own documents (PDFs, generated content)
+- **PRDs Collection**: Users can only access their own Product Requirements Documents
+- **Workspaces Collection**: Only workspace members can access workspace data
+- **Backlog Collection**: Users can only access backlog items from workspaces they're members of
+- **Feedback Collection**: Users can only access feedback from workspaces they're members of
+
+All operations require authentication, and data validation ensures:
+- Users cannot access other users' data
+- Users cannot modify userId/workspaceId fields
+- Workspace membership is verified for shared resources
+
+### For Development/Testing:
+
+If you're still in development and want to test quickly, you can temporarily use test mode rules (NOT recommended for production):
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can read/write their own PRDs
-    match /prds/{document} {
-      allow read, write: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
-    }
-    
-    // Workspace members can read/write workspace data
-    match /workspaces/{workspaceId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid in resource.data.members;
-    }
-    
-    // Backlog and feedback follow workspace permissions
-    match /backlog/{document} {
-      allow read, write: if request.auth != null;
-    }
-    
-    match /feedback/{document} {
-      allow read, write: if request.auth != null;
+    match /{document=**} {
+      allow read, write: if request.time < timestamp.date(2025, 12, 31);
     }
   }
 }
 ```
+
+⚠️ **Warning**: Test mode allows anyone with your Firebase config to read/write all data. Only use for development!
 
 ## 🎯 Hackathon Tips
 

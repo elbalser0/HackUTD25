@@ -9,26 +9,35 @@ import {
   Share
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../context/AuthContext';
+import { getDocuments, deleteDocument as deleteDocumentFromFirestore } from '../api/firebase/firestore';
 import Card from '../components/Card';
 import ButtonPrimary from '../components/ButtonPrimary';
 import colors from '../constants/colors';
 import globalStyles from '../styles/globalStyles';
 
 const DocumentsScreen = ({ navigation }) => {
+  const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadDocuments();
-  }, []);
+    if (user?.uid) {
+      loadDocuments();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const loadDocuments = async () => {
+    if (!user?.uid) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const savedDocs = await AsyncStorage.getItem('prodigypm_documents');
-      if (savedDocs) {
-        setDocuments(JSON.parse(savedDocs));
-      }
+      const docs = await getDocuments(user.uid);
+      setDocuments(docs);
     } catch (error) {
       console.error('Error loading documents:', error);
     } finally {
@@ -46,9 +55,14 @@ const DocumentsScreen = ({ navigation }) => {
           text: 'Delete', 
           style: 'destructive',
           onPress: async () => {
-            const updatedDocs = documents.filter(doc => doc.id !== id);
-            setDocuments(updatedDocs);
-            await AsyncStorage.setItem('prodigypm_documents', JSON.stringify(updatedDocs));
+            try {
+              await deleteDocumentFromFirestore(id);
+              const updatedDocs = documents.filter(doc => doc.id !== id);
+              setDocuments(updatedDocs);
+            } catch (error) {
+              console.error('Error deleting document:', error);
+              Alert.alert('Error', 'Failed to delete document');
+            }
           }
         }
       ]

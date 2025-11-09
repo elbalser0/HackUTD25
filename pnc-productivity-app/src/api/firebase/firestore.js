@@ -196,3 +196,75 @@ export const getFeedback = async (workspaceId) => {
     throw error;
   }
 };
+
+// Document Operations
+export const createDocument = async (userId, documentData) => {
+  if (useMockAuth) {
+    const mockId = 'doc_' + Date.now();
+    console.log('Mock: Creating document with ID:', mockId);
+    return { id: mockId, ...documentData, userId, createdAt: new Date() };
+  }
+  
+  try {
+    const docRef = await addDoc(collection(db, 'documents'), {
+      ...documentData,
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    return { id: docRef.id, ...documentData, userId, createdAt: new Date() };
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getDocuments = async (userId) => {
+  if (useMockAuth) {
+    console.log('Mock: Getting documents for user:', userId);
+    return [];
+  }
+  
+  try {
+    const q = query(
+      collection(db, 'documents'), 
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      let createdAt = Date.now();
+      if (data.createdAt) {
+        // Handle Firestore Timestamp
+        if (data.createdAt.toMillis) {
+          createdAt = data.createdAt.toMillis();
+        } else if (data.createdAt.getTime) {
+          createdAt = data.createdAt.getTime();
+        } else if (typeof data.createdAt === 'number') {
+          createdAt = data.createdAt;
+        }
+      }
+      return { 
+        id: doc.id, 
+        ...data,
+        createdAt
+      };
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteDocument = async (documentId) => {
+  if (useMockAuth) {
+    console.log('Mock: Deleting document:', documentId);
+    return Promise.resolve();
+  }
+  
+  try {
+    const docRef = doc(db, 'documents', documentId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    throw error;
+  }
+};

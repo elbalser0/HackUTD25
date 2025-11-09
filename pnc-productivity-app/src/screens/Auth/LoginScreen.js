@@ -14,7 +14,7 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, createUser } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -34,13 +34,34 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
-  const handleDemoLogin = async () => {
+  const handleRegister = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+
     setLoading(true);
+    
     try {
-      await signIn('demo@pnc.com', 'demo123');
+      await createUser(email, password);
       // Navigation will be handled automatically by AuthContext state change
     } catch (error) {
-      Alert.alert('Demo Login Error', 'Failed to start demo session');
+      let errorMessage = 'Failed to create account';
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already registered. Please sign in instead.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Please enter a valid email address';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak. Please use a stronger password.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      Alert.alert('Registration Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -102,10 +123,10 @@ const LoginScreen = ({ navigation }) => {
           <Text style={styles.dividerText}>or</Text>
 
           <ButtonPrimary
-            title="Demo Access"
-            onPress={handleDemoLogin}
+            title="Register"
+            onPress={handleRegister}
             variant="outline"
-            style={styles.demoButton}
+            style={styles.registerButton}
           />
 
           <Text style={styles.disclaimerText}>
@@ -169,7 +190,7 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     fontSize: 16,
   },
-  demoButton: {
+  registerButton: {
     marginBottom: 16,
   },
   disclaimerText: {
