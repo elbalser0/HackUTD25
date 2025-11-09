@@ -4,7 +4,7 @@ export default {
     {
       id: 'pre-launch',
       name: 'Pre-Launch Preparation',
-      color: '#005A9C',
+      color: '#0069AA',
       items: [
         {
           id: 'legal-review',
@@ -51,7 +51,7 @@ export default {
     {
       id: 'product-readiness',
       name: 'Product Readiness',
-      color: '#0077BE',
+      color: '#0069AA',
       items: [
         {
           id: 'uat-testing',
@@ -98,7 +98,7 @@ export default {
     {
       id: 'marketing-communications',
       name: 'Marketing & Communications',
-      color: '#FFB81C',
+      color: '#F58025',
       items: [
         {
           id: 'marketing-campaign',

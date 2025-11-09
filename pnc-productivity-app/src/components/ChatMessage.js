@@ -5,11 +5,11 @@ import colors from '../constants/colors';
 
 // Map category groups to pill colors (fallback to neutral)
 const groupColors = {
-  product_strategy: '#2563eb',
+  product_strategy: '#0069AA',
   requirements_development: '#7c3aed',
   customer_market_research: '#0d9488',
   prototyping_testing: '#db2777',
-  go_to_market: '#ea580c',
+  go_to_market: '#F58025',
   automation_agents: '#16a34a',
   prd_creation: '#4338ca',
   default: colors.pnc.primary,
