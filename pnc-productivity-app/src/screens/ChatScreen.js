@@ -15,6 +15,7 @@ import { StatusBar } from "expo-status-bar";
 import { Audio } from "expo-av";
 import * as Speech from "expo-speech";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Icon from "react-native-vector-icons/MaterialIcons";
 import { useAuth } from "../context/AuthContext";
 import ChatMessage from "../components/ChatMessage";
 import ChatInput from "../components/ChatInput";
@@ -54,12 +55,14 @@ const ChatScreen = ({ navigation }) => {
 			id: "product_strategy",
 			title: "Product Strategy & Ideation",
 			icon: "💡",
+			iconName: "lightbulb-outline",
 			description: "Brainstorming, market sizing, scenario planning, and aligning customer needs with business goals.",
 		},
 		{
 			id: "requirements_development",
 			title: "Requirements & Development",
 			icon: "📝",
+			iconName: "description",
 			description: "Drafting user stories, acceptance criteria, and backlog grooming with AI-assisted clarity and prioritization.",
 		},
 		{
@@ -72,18 +75,21 @@ const ChatScreen = ({ navigation }) => {
 			id: "prototyping_testing",
 			title: "Prototyping & Testing",
 			icon: "🎨",
+			iconName: "palette",
 			description: "Generating wireframes, mockups, or test cases and iterating with synthetic or real user feedback.",
 		},
 		{
 			id: "go_to_market",
 			title: "Go-to-Market Execution",
 			icon: "🚀",
+			iconName: "rocket-launch",
 			description: "Assisting in persona development, Go-to-Market (GTM) strategy, release notes, and stakeholder communication.",
 		},
 		{
 			id: "automation_agents",
 			title: "Automation & Intelligent Agents",
 			icon: "🤖",
+			iconName: "smart-toy",
 			description: "Automating repetitive Product Manager workflows such as sprint planning, reporting, and cross-team updates.",
 		},
 	];
@@ -168,6 +174,7 @@ const ChatScreen = ({ navigation }) => {
 						id: tool.id,
 						title: tool.title,
 						icon: tool.icon,
+						iconName: tool.iconName,
 						description: tool.description,
 					})),
 				};
@@ -182,12 +189,13 @@ const ChatScreen = ({ navigation }) => {
 					id: Date.now(),
 					text: `Hello ${
 						user?.displayName || "there"
-					}! 👋 I'm your ProdigyPM Assistant. How can I help you today?`,
+					}! I'm your ProdigyPM Assistant. How can I help you today?`,
 					isUser: false,
 					options: tools.map((tool) => ({
 						id: tool.id,
 						title: tool.title,
 						icon: tool.icon,
+						iconName: tool.iconName,
 						description: tool.description,
 					})),
 				};
@@ -246,7 +254,7 @@ const ChatScreen = ({ navigation }) => {
 	// Real Speech Recognition functions using WebView
 	const handleSpeechStart = () => {
 		setIsListening(true);
-		setInputText("🎤 Listening...");
+		setInputText("Listening...");
 	};
 
 	const handleSpeechResult = (transcript) => {

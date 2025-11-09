@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import SectionTitle from '../../components/SectionTitle';
 import Card from '../../components/Card';
 import InputField from '../../components/InputField';
@@ -143,19 +144,19 @@ const LoginScreen = ({ navigation }) => {
 
           <View style={styles.featuresList}>
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>🤖</Text>
+              <Icon name="smart-toy" size={24} color={colors.pnc.primary} style={styles.featureIcon} />
               <Text style={styles.featureText}>AI-Generated PRDs</Text>
             </View>
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>📊</Text>
+              <Icon name="bar-chart" size={24} color={colors.pnc.primary} style={styles.featureIcon} />
               <Text style={styles.featureText}>RICE Prioritization</Text>
             </View>
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>💬</Text>
+              <Icon name="chat-bubble-outline" size={24} color={colors.pnc.primary} style={styles.featureIcon} />
               <Text style={styles.featureText}>Feedback Analysis</Text>
             </View>
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>🚀</Text>
+              <Icon name="rocket-launch" size={24} color={colors.pnc.primary} style={styles.featureIcon} />
               <Text style={styles.featureText}>Launch Planning</Text>
             </View>
           </View>
@@ -212,7 +213,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   featureIcon: {
-    fontSize: 20,
     marginRight: 12,
     width: 30,
   },

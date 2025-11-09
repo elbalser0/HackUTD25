@@ -2,10 +2,10 @@
 export default {
   // PNC Brand Colors
   pnc: {
-    primary: '#005A9C', // PNC Blue
-    secondary: '#0077BE', // Lighter PNC Blue
+    primary: '#0069AA', // PNC Blue
+    secondary: '#F58025', // PNC Orange
     lightBlue: '#E6F3FF',
-    gold: '#FFB81C', // PNC Gold accent
+    orange: '#F58025', // PNC Orange
     darkBlue: '#003D6B',
   },
   

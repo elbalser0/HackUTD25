@@ -7,7 +7,7 @@ export default {
     primaryContainer: colors.pnc.lightBlue,
     secondary: colors.pnc.secondary,
     secondaryContainer: colors.pnc.lightBlue,
-    tertiary: colors.pnc.gold,
+    tertiary: colors.pnc.orange,
     tertiaryContainer: '#FFF8E1',
     surface: colors.white,
     surfaceVariant: colors.gray.light,
