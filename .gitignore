@@ -1,0 +1,53 @@
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env*.local
+
+# API Keys and Secrets
+**/.env
+**/secrets/
+**/config/keys.js
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# macOS
+.DS_Store
+*.pem
+
+# Windows
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Build
+build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# React Native / Metro
+.metro-health-check*
+
+# Local state
+.bash_history
