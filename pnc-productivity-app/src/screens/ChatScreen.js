@@ -18,7 +18,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../context/AuthContext";
 import ChatMessage from "../components/ChatMessage";
 import ChatInput from "../components/ChatInput";
-import ButtonPrimary from "../components/ButtonPrimary";
 import LoadingSpinner from "../components/LoadingSpinner";
 // Deprecated WebView speech component (not functional on mobile); retained for fallback removal later
 // import SpeechRecognitionComponent from '../components/SpeechRecognition';
@@ -44,6 +43,7 @@ const ChatScreen = ({ navigation }) => {
 	const recordingTimerRef = useRef(null);
 	const [categoryModalVisible, setCategoryModalVisible] = useState(false);
 	const [categoryOverrideMessage, setCategoryOverrideMessage] = useState(null);
+	const [menuModalVisible, setMenuModalVisible] = useState(false);
 	const scrollViewRef = useRef();
 	const speechRecognitionRef = useRef();
 	const recordingRef = useRef(null);
@@ -748,22 +748,17 @@ const ChatScreen = ({ navigation }) => {
 					ProdigyPM Assistant
 				</Text>
 
-				<View style={styles.headerActions}>
-					<ButtonPrimary
-						title="Sign Out"
-						onPress={handleLogout}
-						variant="outline"
-						style={styles.logoutButton}
-					/>
-
-					<TouchableOpacity
-						style={styles.documentsButton}
-						onPress={() => navigation.navigate("Documents")}
-					>
-						<Text style={styles.documentsIcon}>📄</Text>
-						<Text style={styles.documentsText}>Docs</Text>
-					</TouchableOpacity>
-				</View>
+				<TouchableOpacity
+					style={styles.menuButton}
+					onPress={() => setMenuModalVisible(true)}
+					activeOpacity={0.7}
+				>
+					<View style={styles.hamburgerIcon}>
+						<View style={styles.hamburgerLine} />
+						<View style={styles.hamburgerLine} />
+						<View style={styles.hamburgerLine} />
+					</View>
+				</TouchableOpacity>
 			</View>
 
 			{/* Chat Messages */}
@@ -841,6 +836,42 @@ const ChatScreen = ({ navigation }) => {
 				</View>
 			</Modal>
 
+			{/* Menu Modal */}
+			<Modal
+				transparent
+				visible={menuModalVisible}
+				animationType="fade"
+				onRequestClose={() => setMenuModalVisible(false)}
+			>
+				<TouchableOpacity
+					style={styles.menuModalBackdrop}
+					activeOpacity={1}
+					onPress={() => setMenuModalVisible(false)}
+				>
+					<View style={styles.menuModalCard}>
+						<TouchableOpacity
+							style={styles.menuItem}
+							onPress={() => {
+								setMenuModalVisible(false);
+								navigation.navigate("Documents");
+							}}
+						>
+							<Text style={styles.menuItemText}>Documents</Text>
+						</TouchableOpacity>
+						<View style={styles.menuDivider} />
+						<TouchableOpacity
+							style={styles.menuItem}
+							onPress={() => {
+								setMenuModalVisible(false);
+								handleLogout();
+							}}
+						>
+							<Text style={[styles.menuItemText, styles.menuItemDanger]}>Sign Out</Text>
+						</TouchableOpacity>
+					</View>
+				</TouchableOpacity>
+			</Modal>
+
 			{/* WebView speech recognition removed in favor of native audio recording + server transcription */}
 		</KeyboardAvoidingView>
 	);
@@ -875,35 +906,57 @@ const styles = StyleSheet.create({
 		marginLeft: 8,
 		alignSelf: "center",
 	},
-	headerActions: {
-		flexDirection: "row",
+	menuButton: {
+		padding: 8,
+		justifyContent: "center",
 		alignItems: "center",
-		maxWidth: 160, // constrain actions so they don't push off-screen
-		justifyContent: "flex-end",
 	},
-	documentsButton: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginLeft: 6,
-		paddingHorizontal: 6,
-		paddingVertical: 4,
-		borderRadius: 6,
-		backgroundColor: "rgba(255, 255, 255, 0.08)",
+	hamburgerIcon: {
+		width: 24,
+		height: 18,
+		justifyContent: "space-between",
 	},
-	documentsIcon: {
+	hamburgerLine: {
+		width: 24,
+		height: 2,
+		backgroundColor: colors.white,
+		borderRadius: 1,
+	},
+	menuModalBackdrop: {
+		flex: 1,
+		backgroundColor: "rgba(0, 0, 0, 0.5)",
+		justifyContent: "flex-start",
+		alignItems: "flex-end",
+		paddingTop: 60,
+		paddingRight: 12,
+	},
+	menuModalCard: {
+		backgroundColor: colors.white,
+		borderRadius: 12,
+		minWidth: 180,
+		shadowColor: colors.black,
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		elevation: 8,
+		overflow: "hidden",
+	},
+	menuItem: {
+		paddingHorizontal: 20,
+		paddingVertical: 16,
+	},
+	menuItemText: {
 		fontSize: 16,
-		marginRight: 6,
+		fontWeight: "500",
+		color: colors.text.primary,
 	},
-	documentsText: {
-		fontSize: 12,
-		fontWeight: "600",
-		color: colors.white,
+	menuItemDanger: {
+		color: colors.error,
 	},
-	logoutButton: {
-		paddingHorizontal: 6,
-		paddingVertical: 4,
-		minHeight: 28,
-		marginRight: 6,
+	menuDivider: {
+		height: 1,
+		backgroundColor: colors.gray.light,
+		marginHorizontal: 12,
 	},
 	chatContainer: {
 		flex: 1,
