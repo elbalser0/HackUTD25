@@ -58,3 +58,4 @@ build/
 
 # Local state
 .bash_history
+.env
