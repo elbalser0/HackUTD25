@@ -1,5 +1,8 @@
 # PRD – AI-Powered Product Management App
 
+[Link to video demonstration](https://youtube.com/shorts/Nzir0v0KA9k?si=HdfX-uPyVgYdhOxy)
+
+
 ## 1. Overview
 
 ### Product Name
