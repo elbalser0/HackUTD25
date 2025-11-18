@@ -190,7 +190,7 @@ The TTS proxy server is only needed if you want to use Google Cloud Text-to-Spee
    - All data is stored in your Firebase project
 
 
-### Known Limitations & TODOs
+### Known Limitations
 
 **Current Limitations:**
 - Text-to-Speech requires a separate proxy server setup (Google Cloud credentials needed)
