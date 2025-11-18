@@ -65,3 +65,4 @@ fi
 trap "kill $PROXY_PID $NGROK_PID 2>/dev/null; exit" INT TERM
 wait
 
+

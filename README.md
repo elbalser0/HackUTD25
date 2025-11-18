@@ -23,6 +23,199 @@ ProdigyPM empowers Product Managers to plan, prioritize, and launch products fas
 ⠀
 ⸻
 
+## Getting Started
+
+### Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+* **Node.js** (v18 or higher recommended)
+* **npm** or **yarn** package manager
+* **Expo CLI** (installed globally via `npm install -g expo-cli` or use `npx expo`)
+* **Firebase account** with a project created
+* **OpenAI API key** (get one from [OpenAI Platform](https://platform.openai.com/))
+* **Google Cloud account** (optional, only needed for Text-to-Speech features)
+
+### Frontend Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd HackUTD25/pnc-productivity-app
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. **Set up environment variables:**
+   
+   Create a `.env` file in the `pnc-productivity-app` directory with the following variables:
+   
+   ```env
+   # Firebase Configuration (required for production)
+   EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here
+   EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   EXPO_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+   EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+   EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
+   
+   # OpenAI API Configuration (required)
+   EXPO_PUBLIC_OPENAI_API_KEY=sk-your-openai-api-key
+   
+   # Optional OpenAI Configuration
+   EXPO_PUBLIC_OPENAI_MODEL=gpt-4
+   EXPO_PUBLIC_OPENAI_FAST_MODEL=gpt-4o-mini
+   EXPO_PUBLIC_FAST_MODE=true
+   EXPO_PUBLIC_OPENAI_TIMEOUT_MS=15000
+   
+   # Text-to-Speech Proxy (optional, only if using TTS features)
+   EXPO_PUBLIC_TTS_PROXY_URL=http://localhost:3000/api/tts
+   
+   # Development Mode (optional - enables mock Firebase for testing without real credentials)
+   EXPO_PUBLIC_USE_MOCK_AUTH=false
+   ```
+   
+   **Note:** To get your Firebase configuration:
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Select your project (or create a new one)
+   - Go to Project Settings → General
+   - Scroll down to "Your apps" and select the web app (or add one)
+   - Copy the configuration values from the `firebaseConfig` object
+
+4. **Start the Expo development server:**
+   ```bash
+   npm start
+   # or
+   expo start
+   ```
+   
+   Then choose your platform:
+   - Press `i` for iOS simulator (requires Xcode on macOS)
+   - Press `a` for Android emulator (requires Android Studio)
+   - Scan the QR code with Expo Go app on your physical device
+   - Press `w` to open in web browser
+
+   Or use platform-specific commands:
+   ```bash
+   npm run ios      # iOS simulator
+   npm run android  # Android emulator
+   npm run web      # Web browser
+   ```
+
+### Backend Setup (Optional - Text-to-Speech Proxy)
+
+The TTS proxy server is only needed if you want to use Google Cloud Text-to-Speech features. This keeps your Google Cloud service account credentials secure on the server side.
+
+1. **Set up Google Cloud Text-to-Speech:**
+   - Create a Google Cloud project
+   - Enable the Cloud Text-to-Speech API
+   - Create a service account and download the JSON key file
+   - Place the service account JSON file in `pnc-productivity-app/` directory (e.g., `pnc-productivity-app-f47d7b6f6c70.json`)
+
+2. **Set up the TTS proxy server:**
+   ```bash
+   cd pnc-productivity-app
+   ./setup-tts-proxy.sh
+   ```
+   
+   Or manually:
+   ```bash
+   cd tts-proxy
+   npm install
+   export GOOGLE_APPLICATION_CREDENTIALS="../pnc-productivity-app-f47d7b6f6c70.json"
+   npm start
+   ```
+   
+   The server will run on `http://localhost:3000` by default.
+
+3. **Update your `.env` file:**
+   ```env
+   EXPO_PUBLIC_TTS_PROXY_URL=http://localhost:3000/api/tts
+   ```
+   
+   **Note:** If running on a physical device, replace `localhost` with your computer's IP address (e.g., `http://192.168.1.100:3000/api/tts`).
+
+### Firebase Configuration
+
+1. **Deploy Firestore Security Rules:**
+   
+   The app includes Firestore security rules in `firestore.rules`. Deploy them to your Firebase project:
+   
+   ```bash
+   # Install Firebase CLI if you haven't already
+   npm install -g firebase-tools
+   
+   # Login to Firebase
+   firebase login
+   
+   # Initialize Firebase in your project (if not already done)
+   cd pnc-productivity-app
+   firebase init firestore
+   
+   # Deploy the rules
+   firebase deploy --only firestore:rules
+   ```
+   
+   **Important:** The Firestore rules enforce user authentication and data isolation. Users can only access their own documents and workspace data they're members of.
+
+2. **Enable Firebase Authentication:**
+   - Go to Firebase Console → Authentication
+   - Enable Email/Password authentication (or other providers you want to use)
+
+### Testing & Demo
+
+1. **Test the app:**
+   - Launch the app using `expo start`
+   - Create a test account using the Sign Up flow
+   - Try the AI chat assistant to generate PRDs, analyze feedback, or prioritize backlog items
+
+2. **Mock Mode (Development without Firebase):**
+   
+   If you want to test the app without setting up Firebase, you can enable mock mode:
+   
+   ```env
+   EXPO_PUBLIC_USE_MOCK_AUTH=true
+   ```
+   
+   This will use mock Firebase services, but AI features will still require a valid OpenAI API key.
+
+3. **Demo Account:**
+   - Currently, there's no pre-seeded demo account
+   - Create your own account through the Sign Up flow
+   - All data is stored in your Firebase project
+
+
+### Known Limitations & TODOs
+
+**Current Limitations:**
+- Text-to-Speech requires a separate proxy server setup (Google Cloud credentials needed)
+- Firestore rules must be manually deployed
+- No offline mode for AI features (requires internet connection)
+- Mock auth mode has limited functionality (no real data persistence)
+
+
+### Troubleshooting
+
+**Common Issues:**
+- **"OpenAI API error"**: Check that `EXPO_PUBLIC_OPENAI_API_KEY` is set correctly in your `.env` file
+- **"Firebase not initialized"**: Ensure all Firebase environment variables are set, or enable mock mode
+- **"TTS Proxy error"**: Make sure the TTS proxy server is running and `EXPO_PUBLIC_TTS_PROXY_URL` points to the correct address
+- **Firestore permission errors**: Deploy the Firestore security rules using `firebase deploy --only firestore:rules`
+- **Expo start fails**: Try clearing the cache with `expo start -c` or `npm start -- --clear`
+
+**Need Help?**
+- Check the [Expo documentation](https://docs.expo.dev/)
+- Review [Firebase documentation](https://firebase.google.com/docs)
+- Open an issue in the repository
+
+⠀
+⸻
+
 ## 2. Target Users
 * **Primary:** Product Managers in financial and regulated industries (e.g., banking, fintech, insurance)
 * **Secondary:** Product Analysts, UX Researchers, and Product Owners seeking AI-enhanced workflow support
@@ -111,25 +304,3 @@ Product Managers struggle to manage data-driven decisions and deliver faster in 
 * **Offline support:** Firestore local cache for limited functionality
 
 ⠀
-⸻
-
-## 8. Success Metrics
-* 50% reduction in time spent on PRD and backlog writing
-* 30% faster sprint planning turnaround
-* 25% increase in cross-team collaboration efficiency
-* 80%+ user satisfaction with AI output relevance
-
-⸻
-
-## 9. Milestones & MVP Scope
-| **Phase** | **Duration** | **Deliverables** |
-|:-:|:-:|:-:|
-| **Phase 1: Setup & Auth** | 1 week | Expo app, Firebase Auth, Firestore structure |
-| **Phase 2: AI Core** | 2 weeks | OpenAI integration (story + research assistant) |
-| **Phase 3: Dashboard & Automation** | 2 weeks | RICE matrix, backlog view, AI summary bot |
-| **Phase 4: Testing & Launch** | 1 week | QA, analytics, GTM demo deck |
-## 10. Future Enhancements
-* AI-generated wireframes via image APIs
-* Slack / Teams integration for PM reports
-* Jira / Linear synchronization
-* Custom LLM fine-tuning using anonymized PM data
